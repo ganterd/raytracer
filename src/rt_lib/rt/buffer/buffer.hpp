@@ -1,0 +1,7 @@
+
+namespace rt
+{
+	class Buffer
+	{
+	};
+}
