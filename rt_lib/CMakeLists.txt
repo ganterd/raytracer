@@ -1,4 +1,6 @@
 
+find_package(SDL2 REQUIRED)
+
 file(GLOB_RECURSE RT_LIB_HEADERS "*.hpp")
 file(GLOB_RECURSE RT_LIB_SOURCES "*.cpp")
 
