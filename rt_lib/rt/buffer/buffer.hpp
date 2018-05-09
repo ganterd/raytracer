@@ -1,3 +1,5 @@
+#pragma once
+
 #include <glm/glm.hpp>
 
 namespace rt
@@ -7,11 +9,11 @@ namespace rt
 	public:
 		int mSizex;
 		int mSizey;
-		glm::vec3* mData;
+		glm::u8vec3* mData;
 
 		Buffer(int x, int y)
 		{
-			mData = new glm::vec3[x * y];
+			mData = new glm::u8vec3[x * y];
 			mSizex = x;
 			mSizey = y;
 		}
@@ -21,7 +23,7 @@ namespace rt
 			delete[] mData;
 		}
 
-		glm::vec3& Pixel(int x, int y)
+		glm::u8vec3& Pixel(int x, int y)
 		{
 			return mData[x + mSizey * x];
 		}

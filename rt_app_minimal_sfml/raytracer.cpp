@@ -3,6 +3,8 @@
 #include <SFML/Graphics.hpp>
 
 #include <rt/scene/scene.hpp>
+#include <rt/tracers/simpletracer.hpp>
+#include "sfmlbuffer.hpp"
 
 int main (int argc, char* argv[])
 {
@@ -17,7 +19,15 @@ int main (int argc, char* argv[])
 	rt::Scene scene;
 	scene.fromFile(std::string(argv[1]));
 
-	sf::Window window(sf::VideoMode(512, 512), "Raytracer");
+	sf::RenderWindow window(sf::VideoMode(512, 512), "Raytracer");
+
+	rt::SFMLBuffer buffer(512, 512);
+
+	rt::SimpleRayTracer tracer;
+	tracer.Trace(&scene, &buffer);
+	buffer.Copy();
+	window.draw(buffer.m_SFMLSprite);
+	window.display();
 
 	while(window.isOpen())
 	{
@@ -26,6 +36,7 @@ int main (int argc, char* argv[])
 		{
 			if(evt.type == sf::Event::Closed)
 				window.close();
+			window.draw(buffer.m_SFMLSprite);
 			window.display();
 		}
 	}
