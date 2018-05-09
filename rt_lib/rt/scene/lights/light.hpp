@@ -1,0 +1,6 @@
+namespace rt
+{
+	class Light
+	{
+	};
+}
