@@ -25,6 +25,8 @@ bool rt::Scene::fromFile(const std::string& file)
 
 	std::cout << "   |- Lights: " << assimpScene->mNumLights << std::endl;
 	std::cout << "   |- Cameras: " << assimpScene->mNumCameras << std::endl;
+	if(assimpScene->mNumCameras)
+		ProcessCamera(assimpScene->mCameras[0]);
 	std::cout << "   |- Textures: " << assimpScene->mNumTextures << std::endl;
 
 	return true;
@@ -74,4 +76,35 @@ void rt::Scene::ProcessMesh(aiMesh* m, const aiMatrix4x4& transform)
 	m_TotalTris += tris;
 
 	std::cout << std::endl;
+}
+
+void rt::Scene::ProcessCamera(aiCamera* c)
+{
+
+	aiVector3D cp = c->mPosition;
+	aiVector3D cl = c->mLookAt;
+	aiVector3D cu = c->mUp;
+
+	aiNode* cn = assimpScene->mRootNode->FindNode(c->mName);
+
+	aiMatrix4x4 ct = cn->mTransformation;
+
+	cn = cn->mParent;
+	while(cn->mParent)
+	{
+		ct = cn->mTransformation * ct;
+		cn = cn->mParent;
+	}
+
+	cp *= ct;
+	cl *= ct;
+	cu *= ct;
+
+	mCamera = new Camera(
+		glm::vec3(cp.x, cp.y, cp.z), 
+		glm::vec3(cl.x, cl.y, cl.z), 
+		glm::vec3(cu.x, cu.y, cu.z), 
+		c->mAspect, 
+		c->mHorizontalFOV
+	);
 }
