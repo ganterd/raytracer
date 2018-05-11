@@ -9,11 +9,11 @@ namespace rt
 	public:
 		int mSizex;
 		int mSizey;
-		glm::u8vec3* mData;
+		glm::u8vec4* mData;
 
 		Buffer(int x, int y)
 		{
-			mData = new glm::u8vec3[x * y];
+			mData = new glm::u8vec4[x * y];
 			mSizex = x;
 			mSizey = y;
 		}
@@ -23,9 +23,9 @@ namespace rt
 			delete[] mData;
 		}
 
-		glm::u8vec3& Pixel(int x, int y)
+		glm::u8vec4& Pixel(int x, int y)
 		{
-			return mData[x + mSizey * x];
+			return mData[x + mSizey * y];
 		}
 	};
 }
