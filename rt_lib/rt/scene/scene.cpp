@@ -182,15 +182,25 @@ void rt::Scene::ProcessLights()
 		std::cout << "         |- Spec: [" << spec.r << "," << spec.g << "," << spec.b << "]" << std::endl;	
 
 		aiColor3D amb = l->mColorAmbient;
-		std::cout << "         |- Amb: [" << amb.r << "," << amb.g << "," << amb.b << "]" << std::endl; 
+		std::cout << "         |- Amb: [" << amb.r << "," << amb.g << "," << amb.b << "]" << std::endl;
+
+		float atten0 = l->mAttenuationConstant;
+		float atten1 = l->mAttenuationLinear;
+		float atten2 = l->mAttenuationQuadratic;
+		std::cout << "         |- Atten0: " << atten0 << std::endl;
+		std::cout << "         |- Atten1: " << atten1 << std::endl;
+		std::cout << "         |- Atten2: " << atten2 << std::endl;
 
 		// TMP: For now everything is a point light;
-		PointLight light(
+		PointLight* light = new PointLight(
 			glm::vec3(pos.x, pos.y, pos.z),
 			glm::vec3(diff.r, diff.g, diff.b),
 			glm::vec3(spec.r, spec.g, spec.b),
 			glm::vec3(amb.r, amb.g, amb.b)
 		);
+		light->mAttenuationConstant = atten0;
+		light->mAttenuationLinear = atten1;
+		light->mAttenuationQuadratic = atten2;
 		mLights.push_back(light);
 	}
 }

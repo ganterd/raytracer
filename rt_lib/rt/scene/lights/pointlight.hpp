@@ -12,6 +12,10 @@ namespace rt
 		glm::vec3 mColourSpecular;
 		glm::vec3 mColourAmbient;
 
+		float mAttenuationConstant;
+		float mAttenuationLinear;
+		float mAttenuationQuadratic;
+
 		PointLight()
 		{
 			mType = Point;
@@ -29,6 +33,14 @@ namespace rt
 			mColourDiffuse = colourDiffuse;
 			mColourAmbient = colourAmbient;
 			mColourSpecular = colourSpecular;
+		}
+
+		/**
+ 		 * Calculate the intensity of the light at a distance d
+ 		 */
+		float intensity(float d)
+		{
+			return 1.0f / (mAttenuationLinear + mAttenuationConstant * d + mAttenuationQuadratic * d * d);
 		}
 	};
 }

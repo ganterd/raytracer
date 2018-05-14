@@ -34,7 +34,8 @@ namespace rt
 			const glm::vec3& origin,
 			const glm::vec3& direction,
 			float& outHitDistance,
-			glm::vec3& outHit
+			glm::vec3& outHit,
+			glm::vec3& outNormal
 		){
 			const float e = 0.000001f;
 			glm::vec3 tvec, pvec, qvec;
@@ -59,6 +60,7 @@ namespace rt
 
 			outHitDistance = glm::dot(edge2, qvec) * inv_det;
 			outHit = origin + direction * outHitDistance;
+			outNormal = n0; //TMP just take n0 normal
 			return true;
 		}
 	};

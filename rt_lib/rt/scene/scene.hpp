@@ -25,7 +25,7 @@ namespace rt
 
 		std::vector<Mesh*> m_Meshes;
 		std::vector<Tri> m_Tris;
-		std::vector<Light> mLights;
+		std::vector<Light*> mLights;
 
 		Camera* mCamera;
 

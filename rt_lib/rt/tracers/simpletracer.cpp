@@ -19,6 +19,7 @@ void rt::SimpleRayTracer::Trace(
 
 	renderRegionMax.x = glm::min(renderRegionMax.x, b->mSizex);
 	renderRegionMax.y = glm::min(renderRegionMax.y, b->mSizey);
+	const float maxDepth = 10000.0f;
 
 	for(int y = renderRegionMin.y; y < renderRegionMax.y; ++y)
 	{
@@ -33,27 +34,61 @@ void rt::SimpleRayTracer::Trace(
 			}
 			
 			// Really really simple brute force. I'll make this better. I promise.
-			float currentDepth = 10000.0f;
-			glm::vec3 currentPosition(0);
+			float currentDepth = maxDepth;
+			glm::vec3 currentPosition(0.0f);
+			glm::vec3 currentNormal(0.0f);
 			for(int i = 0; i < s->m_Tris.size(); ++i)
 			{
-				float triHitDistance;
-				glm::vec3 triHitPosition;
-
-				if(s->m_Tris[i].rayIntersection(rayOrigin, rayDirection, triHitDistance, triHitPosition))
+				float hitDistance;
+				glm::vec3 hitPosition;
+				glm::vec3 hitNormal;
+				if(s->m_Tris[i].rayIntersection(rayOrigin, rayDirection, hitDistance, hitPosition, hitNormal))
 				{
-					if(triHitDistance < currentDepth)
+					if(hitDistance < currentDepth)
 					{
-						currentDepth = triHitDistance;
-						currentPosition = triHitPosition;
+						currentDepth = hitDistance;
+						currentPosition = hitPosition;
+						currentNormal = hitNormal;
 					}
 				}
 			}
 
+			glm::vec3 colour(0.0f);
+			if(currentDepth != maxDepth)
+			{
+				colour = AccumulateLights(s, currentPosition, currentNormal);
+			}
+
 			//glm::u8vec4 c = glm::vec4(rayDirection, 1.0f) * 255.0f;
 			//glm::u8vec4 c = glm::vec4(glm::clamp(currentPosition * 0.1f, 0.0f, 1.0f), 1.0f) * 255.0f;
-			glm::u8vec4 c = glm::vec4(glm::clamp(glm::vec3(currentDepth * 0.01f), 0.0f, 1.0f), 1.0f) * 255.0f;
+			//glm::u8vec4 c = glm::vec4(glm::clamp(glm::vec3(currentDepth * 0.01f), 0.0f, 1.0f), 1.0f) * 255.0f;
+			glm::u8vec4 c = glm::vec4(glm::clamp(colour, 0.0f, 1.0f), 1.0f) * 255.0f;
 			b->Pixel(x, y) = c;
 		}
 	}
+}
+
+glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, const glm::vec3& n)
+{
+	glm::vec3 accumulatedColour = glm::vec3(0.0f);
+	
+	// Check all lights as if they were a point light for now
+	for(int l = 0; l < s->mLights.size(); ++l)
+	{
+		PointLight* light = (PointLight*)s->mLights[l];
+
+		// 1: Make sure the surface can see the light (normal check)
+		glm::vec3 toLight = light->mPosition - p;
+
+		float d = glm::length(toLight);
+		toLight = glm::normalize(toLight);
+
+		float dot = glm::clamp(glm::dot(n, toLight), 0.0f, 1.0f);
+		float intensity = light->intensity(d);
+		accumulatedColour += light->mColourDiffuse * dot * intensity;
+		//std::cout << "d" << d << std::endl;
+		//accumulatedColour += glm::vec3(d);
+	}
+
+	return accumulatedColour;
 }
