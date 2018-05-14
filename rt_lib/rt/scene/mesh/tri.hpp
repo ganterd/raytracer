@@ -6,61 +6,60 @@ namespace rt
 	class Tri
 	{
 	public:
-		glm::vec3 vertices[3];
-		glm::vec3 normals[3];
-		glm::vec3 edges[2];
+		glm::vec3 v0, v1, v2;
+		glm::vec3 n0, n1, n2;
+		glm::vec3 edge1, edge2;
 		glm::vec2 min;
 		glm::vec2 max;
 
 		Tri(
-			glm::vec3 v0, glm::vec3 v1, glm::vec3 v2,
-			glm::vec3 n0, glm::vec3 n1, glm::vec3 n2
+			const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2,
+			const glm::vec3& n0, const glm::vec3& n1, const glm::vec3& n2
 		)
 		{
-			vertices[0] = v0;
-			vertices[1] = v1;
-			vertices[2] = v2;
-			normals[0] = n0;
-			normals[1] = n1;
-			normals[2] = n2;
+			this->v0 = v0;
+			this->v1 = v1;
+			this->v2 = v2;
+			this->n0 = n0;
+			this->n1 = n1;
+			this->n2 = n2;
 
 			// Precalculate edges
-			edges[0] = v1 - v0;
-			edges[1] = v2 - v0;
+			edge1 = v1 - v0;
+			edge2 = v2 - v0;
 
 		}
 
 		bool rayIntersection(
 			const glm::vec3& origin,
 			const glm::vec3& direction,
+			float& outHitDistance,
 			glm::vec3& outHit
 		){
-			glm::vec3 h, s, q;
-			float a, f, u, v;
+			const float e = 0.000001f;
+			glm::vec3 tvec, pvec, qvec;
+			float det, inv_det;
 
-			h = glm::cross(direction, edges[1]);
-			a = glm::dot(edges[0], h);
-			if(a > -0.0000001f && a < 0.0000001f)
+			pvec = glm::cross(direction, edge2);
+			det = glm::dot(edge1, pvec);
+
+			if(det > -e && det < e)
 				return false;
-
-			f = 1.0f / a;
-			s = origin - vertices[0];
-			u = f * glm::dot(s, h);
+			inv_det = 1.0f / det;
+			
+			tvec = origin - v0;
+			float u = glm::dot(tvec, pvec) * inv_det;
 			if(u < 0.0f || u > 1.0f)
 				return false;
 
-			q = glm::cross(s, edges[0]);
-			v = f * glm::dot(direction, q);
+			qvec = glm::cross(tvec, edge1);
+			float v = glm::dot(direction, qvec) * inv_det;
 			if(v < 0.0f || u + v > 1.0f)
 				return false;
 
-			float t = f * glm::dot(edges[1], q);
-			if(t > 0.000001f)
-			{
-				outHit = origin + direction * t;
-				return true;
-			}
-			return false;
+			outHitDistance = glm::dot(edge2, qvec) * inv_det;
+			outHit = origin + direction * outHitDistance;
+			return true;
 		}
 	};
 }

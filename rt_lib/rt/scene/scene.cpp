@@ -34,7 +34,7 @@ bool rt::Scene::fromFile(const std::string& file)
 
 void rt::Scene::NodeRecurse(aiNode* n, const aiMatrix4x4& t)
 {
-	aiMatrix4x4 currentTransform = t * n->mTransformation;
+	aiMatrix4x4 currentTransform =  n->mTransformation * t;
 	for(int m = 0; m < n->mNumMeshes; ++m)
 	{
 		ProcessMesh(assimpScene->mMeshes[n->mMeshes[m]], currentTransform);
@@ -50,19 +50,19 @@ void rt::Scene::ProcessMesh(aiMesh* m, const aiMatrix4x4& transform)
 {	
 	std::cout << "      '" << m->mName.C_Str() << "': ";
 
-	int tris = m->mNumVertices;
+	int tris = m->mNumFaces;
 	std::cout << " v:" << tris;
 	for(int t = 0; t < tris; ++t)
 	{
 		aiVector3D v0, v1, v2;
 		aiVector3D n0, n1, n2;
 
-		v0 = transform * m->mVertices[t + 0];
-		v1 = transform * m->mVertices[t + 1];
-		v2 = transform * m->mVertices[t + 2];
-		n0 = transform * m->mNormals[t + 0];
-		n1 = transform * m->mNormals[t + 1];
-		n2 = transform * m->mNormals[t + 2];
+		v0 = transform * m->mVertices[m->mFaces[t].mIndices[0]];
+		v1 = transform * m->mVertices[m->mFaces[t].mIndices[1]];
+		v2 = transform * m->mVertices[m->mFaces[t].mIndices[2]];
+		n0 = transform * m->mNormals[m->mFaces[t].mIndices[0]];
+		n1 = transform * m->mNormals[m->mFaces[t].mIndices[1]];
+		n2 = transform * m->mNormals[m->mFaces[t].mIndices[2]];
 
 		m_Tris.push_back(Tri(
 			glm::vec3(v0.x, v0.y, v0.z), 
@@ -96,9 +96,20 @@ void rt::Scene::ProcessCamera(aiCamera* c)
 		cn = cn->mParent;
 	}
 
+	aiMatrix3x3 rotationMatrix(ct);
+
 	cp *= ct;
-	cl *= ct;
-	cu *= ct;
+	cl *= rotationMatrix;
+	cu *= rotationMatrix;
+
+//	mCamera = new Camera(
+//		glm::vec3(-20,20,20),//glm::vec3(cp.x, cp.y, cp.z), 
+//		glm::vec3(0,0,0),//glm::vec3(cl.x, cl.y, cl.z), 
+//		glm::vec3(0,0,1),//glm::vec3(cu.x, cu.y, cu.z), 
+//		c->mAspect, 
+//		glm::degrees(c->mHorizontalFOV)
+//	);
+
 
 	mCamera = new Camera(
 		glm::vec3(cp.x, cp.y, cp.z), 

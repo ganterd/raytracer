@@ -25,7 +25,8 @@ namespace rt
 
 		glm::u8vec4& Pixel(int x, int y)
 		{
-			return mData[x + mSizey * y];
+			int flipy = mSizey - y;
+			return mData[x + mSizex * flipy];
 		}
 	};
 }

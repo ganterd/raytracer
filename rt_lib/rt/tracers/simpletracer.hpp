@@ -7,5 +7,10 @@ namespace rt
 	{
 	public:
 		void Trace(Scene* s, Buffer* b);
+		void Trace(
+			Scene* s, Buffer* b,
+			const glm::ivec2& renderRegionMin,
+			const glm::ivec2& renderRegionMax
+		);
 	};
 }
