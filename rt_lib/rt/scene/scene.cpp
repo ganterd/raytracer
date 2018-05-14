@@ -4,7 +4,7 @@ bool rt::Scene::fromFile(const std::string& file)
 {
 	Assimp::Importer importer;
 
-	assimpScene = importer.ReadFile(file, aiProcess_Triangulate);
+	assimpScene = importer.ReadFile(file, aiProcess_Triangulate | aiProcess_GenNormals);
 
 	if(!assimpScene)
 	{
@@ -53,23 +53,21 @@ void rt::Scene::ProcessMesh(aiMesh* m, const aiMatrix4x4& transform)
 	std::cout << " v:" << tris;
 	for(int t = 0; t < tris; ++t)
 	{
-		aiVector3D v0, v1, v2;
-		aiVector3D n0, n1, n2;
+		glm::vec4 v0, v1, v2;
+		glm::vec4 n0, n1, n2;
+		glm::mat4 mat = AssimpToGLM(transform);
 
-		v0 = transform * m->mVertices[m->mFaces[t].mIndices[0]];
-		v1 = transform * m->mVertices[m->mFaces[t].mIndices[1]];
-		v2 = transform * m->mVertices[m->mFaces[t].mIndices[2]];
-		n0 = transform * m->mNormals[m->mFaces[t].mIndices[0]];
-		n1 = transform * m->mNormals[m->mFaces[t].mIndices[1]];
-		n2 = transform * m->mNormals[m->mFaces[t].mIndices[2]];
+		/* Import and transform the vertices and normals for this triangle */
+		v0 = mat * glm::vec4(AssimpToGLM(m->mVertices[m->mFaces[t].mIndices[0]]), 1.0f);
+		v1 = mat * glm::vec4(AssimpToGLM(m->mVertices[m->mFaces[t].mIndices[1]]), 1.0f);
+		v2 = mat * glm::vec4(AssimpToGLM(m->mVertices[m->mFaces[t].mIndices[2]]), 1.0f);
+		n0 = mat * glm::vec4(AssimpToGLM(m->mNormals[m->mFaces[t].mIndices[0]]), 0.0f);
+		n1 = mat * glm::vec4(AssimpToGLM(m->mNormals[m->mFaces[t].mIndices[1]]), 0.0f);
+		n2 = mat * glm::vec4(AssimpToGLM(m->mNormals[m->mFaces[t].mIndices[2]]), 0.0f);
 
 		m_Tris.push_back(Tri(
-			glm::vec3(v0.x, v0.y, v0.z), 
-			glm::vec3(v1.x, v1.y, v1.z), 
-			glm::vec3(v2.x, v2.y, v2.z), 
-			glm::vec3(n0.x, n0.y, n0.z), 
-			glm::vec3(n1.x, n1.y, n1.z), 
-			glm::vec3(n2.x, n2.y, n2.z)
+			glm::vec3(v0), glm::vec3(v1), glm::vec3(v2), 
+			glm::vec3(n0), glm::vec3(n1), glm::vec3(n2)
 		));	
 	}
 	m_TotalTris += tris;

@@ -48,7 +48,10 @@ void rt::SimpleRayTracer::Trace(
 					{
 						currentDepth = hitDistance;
 						currentPosition = hitPosition;
-						currentNormal = hitNormal;
+						if(glm::dot(hitNormal, rayDirection) > 0.0f)
+							currentNormal = -hitNormal;
+						else
+							currentNormal = hitNormal;
 					}
 				}
 			}
@@ -82,12 +85,32 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, co
 
 		float d = glm::length(toLight);
 		toLight = glm::normalize(toLight);
-
 		float dot = glm::clamp(glm::dot(n, toLight), 0.0f, 1.0f);
-		float intensity = light->intensity(d);
-		accumulatedColour += light->mColourDiffuse * dot * intensity;
-		//std::cout << "d" << d << std::endl;
-		//accumulatedColour += glm::vec3(d);
+		if(dot > 0.0f)
+		{
+			glm::vec3 biasPosition = p + n * 0.01f;
+			bool canSeeLight = true;
+			for(int i = 0; i < s->m_Tris.size() && canSeeLight; ++i)
+			{
+				float hitDistance;
+				glm::vec3 hitPosition;
+				glm::vec3 hitNormal;
+				if(s->m_Tris[i].rayIntersection(biasPosition, toLight, hitDistance, hitPosition, hitNormal))
+				{
+					if(hitDistance < d)
+						canSeeLight = false;
+				}
+			}
+
+			if(canSeeLight)
+			{
+				float intensity = glm::max(dot * light->intensity(d), 0.0f);
+
+				glm::vec3 meshDiffuseColour(0.8f, 0.8f, 0.8f);
+
+				accumulatedColour += meshDiffuseColour * light->mColourDiffuse * intensity;
+			}
+		}
 	}
 
 	return accumulatedColour;

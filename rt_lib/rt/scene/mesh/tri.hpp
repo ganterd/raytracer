@@ -55,10 +55,14 @@ namespace rt
 
 			qvec = glm::cross(tvec, edge1);
 			float v = glm::dot(direction, qvec) * inv_det;
-			if(v < 0.0f || u + v > 1.0f)
+			if(v < 0.0f || (u + v > 1.0f))
 				return false;
 
-			outHitDistance = glm::dot(edge2, qvec) * inv_det;
+			float d = glm::dot(edge2, qvec) * inv_det;
+			if(d <= 0.0f)
+				return false;
+
+			outHitDistance = d;
 			outHit = origin + direction * outHitDistance;
 			outNormal = n0; //TMP just take n0 normal
 			return true;
