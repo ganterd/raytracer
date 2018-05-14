@@ -12,10 +12,13 @@ void rt::SimpleRayTracer::Trace(
 void rt::SimpleRayTracer::Trace(
 	Scene* s, 
 	Buffer* b, 
-	const glm::ivec2& renderRegionMin, 
-	const glm::ivec2& renderRegionMax
+	glm::ivec2 renderRegionMin, 
+	glm::ivec2 renderRegionMax
 ){
 	s->mCamera->SetAspectRatio((float)b->mSizex / (float)b->mSizey);
+
+	renderRegionMax.x = glm::min(renderRegionMax.x, b->mSizex);
+	renderRegionMax.y = glm::min(renderRegionMax.y, b->mSizey);
 
 	for(int y = renderRegionMin.y; y < renderRegionMax.y; ++y)
 	{

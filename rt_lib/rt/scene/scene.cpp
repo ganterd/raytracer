@@ -99,7 +99,7 @@ void rt::Scene::ProcessCamera(aiCamera* c)
 	aiMatrix3x3 rotationMatrix(ct);
 
 	cp *= ct;
-	cl *= rotationMatrix;
+	cl *= ct;//rotationMatrix;
 	cu *= rotationMatrix;
 
 //	mCamera = new Camera(
