@@ -62,6 +62,8 @@ void rt::SimpleRayTracer::Trace(
 				colour = AccumulateLights(s, currentPosition, currentNormal);
 			}
 
+			colour = glm::pow(colour, glm::vec3(1.0f / 2.2f));
+
 			//glm::u8vec4 c = glm::vec4(rayDirection, 1.0f) * 255.0f;
 			//glm::u8vec4 c = glm::vec4(glm::clamp(currentPosition * 0.1f, 0.0f, 1.0f), 1.0f) * 255.0f;
 			//glm::u8vec4 c = glm::vec4(glm::clamp(glm::vec3(currentDepth * 0.01f), 0.0f, 1.0f), 1.0f) * 255.0f;
@@ -115,5 +117,5 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, co
 
 
 
-	return glm::pow(accumulatedColour, glm::vec3(1.0f / 2.2f));
+	return accumulatedColour;
 }
