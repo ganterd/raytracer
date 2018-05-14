@@ -37,7 +37,6 @@ include_directories(external/assimp/include)
 include_directories(${CMAKE_BINARY_DIR}/external/assimp/include)
 
 find_package(Threads)
-message("CMake Build Dir: " ${CMAKE_BINARY_DIR})
 
 #ExternalProject_Add(
 #	glm

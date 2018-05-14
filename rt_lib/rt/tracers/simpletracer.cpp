@@ -52,7 +52,7 @@ void rt::SimpleRayTracer::Trace(
 
 			//glm::u8vec4 c = glm::vec4(rayDirection, 1.0f) * 255.0f;
 			//glm::u8vec4 c = glm::vec4(glm::clamp(currentPosition * 0.1f, 0.0f, 1.0f), 1.0f) * 255.0f;
-			glm::u8vec4 c = glm::vec4(glm::clamp(glm::vec3(currentDepth * 0.05f), 0.0f, 1.0f), 1.0f) * 255.0f;
+			glm::u8vec4 c = glm::vec4(glm::clamp(glm::vec3(currentDepth * 0.01f), 0.0f, 1.0f), 1.0f) * 255.0f;
 			b->Pixel(x, y) = c;
 		}
 	}

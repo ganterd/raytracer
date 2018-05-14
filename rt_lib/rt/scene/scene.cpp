@@ -22,8 +22,7 @@ bool rt::Scene::fromFile(const std::string& file)
 
 	std::cout << "   |- Total Tris: " << m_TotalTris << std::endl;
 
-
-	std::cout << "   |- Lights: " << assimpScene->mNumLights << std::endl;
+	ProcessLights();
 	std::cout << "   |- Cameras: " << assimpScene->mNumCameras << std::endl;
 	if(assimpScene->mNumCameras)
 		ProcessCamera(assimpScene->mCameras[0]);
@@ -118,4 +117,80 @@ void rt::Scene::ProcessCamera(aiCamera* c)
 		c->mAspect, 
 		c->mHorizontalFOV
 	);
+}
+
+void rt::Scene::ProcessLights()
+{
+	std::cout << "   |- Lights: " << assimpScene->mNumLights << std::endl;
+	for(int i = 0; i < assimpScene->mNumLights; ++i)
+	{
+		aiLight* l = assimpScene->mLights[i];
+		std::cout << "      |- '" << l->mName.C_Str() << "'" << std::endl;
+		
+		std::string lightType = "";
+		switch(l->mType)
+		{
+		case aiLightSource_UNDEFINED:
+			lightType = "Unknown";
+			break;
+		case aiLightSource_DIRECTIONAL:
+			lightType = "Directional";
+			break;
+		case aiLightSource_POINT:
+			lightType = "Point";
+			break;
+		case aiLightSource_SPOT:
+			lightType = "Spot";
+			break;
+		case aiLightSource_AMBIENT:
+			lightType = "Ambient";
+			break;
+		case aiLightSource_AREA:
+			lightType = "Area";
+			break;
+		}
+		std::cout << "         |- Type: " << lightType << std::endl;
+
+		// Calculate the transformations for the light's node
+		aiNode* node = assimpScene->mRootNode->FindNode(l->mName);
+		aiMatrix4x4 transform = node->mTransformation;
+		node = node->mParent;
+		while(node)
+		{
+			transform = node->mTransformation * transform;
+			node = node->mParent;
+		}
+		aiMatrix3x3 rotation(transform);
+
+		// Determine and transform positions and vectors
+		aiVector3D pos = transform * l->mPosition;
+		std::cout << "         |- Pos: [" << pos.x << "," << pos.y << "," << pos.z << "]" << std::endl;
+
+		aiVector3D dir = transform * l->mDirection - pos;
+		std::cout << "         |- Dir: [" << dir.x << "," << dir.y << "," << dir.z << "]" << std::endl;
+
+		aiVector3D up = transform * l->mUp - pos;
+		std::cout << "         |- Up: [" << up.x << "," << up.y << "," << up.z << "]" << std::endl;
+
+		aiVector2D area = l->mSize;
+		std::cout << "         |- Area: [" << area.x << "," << area.y << "]" << std::endl;
+
+		aiColor3D diff = l->mColorDiffuse;
+		std::cout << "         |- Diffuse: [" << diff.r << "," << diff.g << "," << diff.b << "]" << std::endl;
+
+		aiColor3D spec = l->mColorSpecular;
+		std::cout << "         |- Spec: [" << spec.r << "," << spec.g << "," << spec.b << "]" << std::endl;	
+
+		aiColor3D amb = l->mColorAmbient;
+		std::cout << "         |- Amb: [" << amb.r << "," << amb.g << "," << amb.b << "]" << std::endl; 
+
+		// TMP: For now everything is a point light;
+		PointLight light(
+			glm::vec3(pos.x, pos.y, pos.z),
+			glm::vec3(diff.r, diff.g, diff.b),
+			glm::vec3(spec.r, spec.g, spec.b),
+			glm::vec3(amb.r, amb.g, amb.b)
+		);
+		mLights.push_back(light);
+	}
 }
