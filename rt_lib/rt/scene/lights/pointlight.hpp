@@ -40,7 +40,7 @@ namespace rt
  		 */
 		float intensity(float d)
 		{
-			return 5.0f / (d * d);
+			return 1.0f / (d * d);
 			//return 1.0f / (mAttenuationLinear + mAttenuationConstant * d + mAttenuationQuadratic * d * d);
 		}
 	};

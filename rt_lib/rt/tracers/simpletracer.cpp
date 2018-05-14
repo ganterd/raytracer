@@ -113,5 +113,7 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, co
 		}
 	}
 
-	return accumulatedColour;
+
+
+	return glm::pow(accumulatedColour, glm::vec3(1.0f / 2.2f));
 }
