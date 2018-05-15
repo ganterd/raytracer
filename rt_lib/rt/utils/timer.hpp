@@ -28,7 +28,7 @@ namespace rt
             mStart = std::chrono::system_clock::now();
         }
 
-        float end()
+        float stop()
         {
             mEnd = std::chrono::system_clock::now();
             return getTime();

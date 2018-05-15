@@ -25,52 +25,67 @@ void rt::SimpleRayTracer::Trace(
 	{
 		for(int x = renderRegionMin.x; x < renderRegionMax.x; ++x)
 		{
-			glm::vec3 rayDirection;
-			glm::vec3 rayOrigin;
+			Ray ray;
 			if(s->mCamera)
 			{
-				rayDirection = s->mCamera->Ray(x, y, b->mSizex, b->mSizey);
-				rayOrigin = s->mCamera->mPosition;
+				ray.mDirection = s->mCamera->Ray(x, y, b->mSizex, b->mSizey);
+				ray.mOrigin = s->mCamera->mPosition;
 			}
 			
 			// Really really simple brute force. I'll make this better. I promise.
-			float currentDepth = maxDepth;
-			glm::vec3 currentPosition(0.0f);
-			glm::vec3 currentNormal(0.0f);
-			for(int i = 0; i < s->m_Tris.size(); ++i)
-			{
-				float hitDistance;
-				glm::vec3 hitPosition;
-				glm::vec3 hitNormal;
-				if(s->m_Tris[i].rayIntersection(rayOrigin, rayDirection, hitDistance, hitPosition, hitNormal))
-				{
-					if(hitDistance < currentDepth)
-					{
-						currentDepth = hitDistance;
-						currentPosition = hitPosition;
-						if(glm::dot(hitNormal, rayDirection) > 0.0f)
-							currentNormal = -hitNormal;
-						else
-							currentNormal = hitNormal;
-					}
-				}
-			}
-
+			RayHit hit;
 			glm::vec3 colour(0.0f);
-			if(currentDepth != maxDepth)
+			if(Shoot(s, ray, hit))
 			{
-				colour = AccumulateLights(s, currentPosition, currentNormal);
+				colour = AccumulateLights(s, hit.mHitPosition, hit.mSurfaceNormal);
 			}
 
 			colour = glm::pow(colour, glm::vec3(1.0f / 2.2f));
-
-			//glm::u8vec4 c = glm::vec4(rayDirection, 1.0f) * 255.0f;
-			//glm::u8vec4 c = glm::vec4(glm::clamp(currentPosition * 0.1f, 0.0f, 1.0f), 1.0f) * 255.0f;
-			//glm::u8vec4 c = glm::vec4(glm::clamp(glm::vec3(currentDepth * 0.01f), 0.0f, 1.0f), 1.0f) * 255.0f;
 			glm::u8vec4 c = glm::vec4(glm::clamp(colour, 0.0f, 1.0f), 1.0f) * 255.0f;
 			b->Pixel(x, y) = c;
+			
 		}
 	}
+}
+
+bool rt::SimpleRayTracer::Shoot(Scene* s, const Ray& ray, RayHit& hit)
+{
+
+	int triCount = s->m_Tris.size();
+	Tri* tris = &s->m_Tris[0];
+	for(int i = 0; i < triCount; ++i)
+	{
+		RayHit currentHit;
+		if(tris[i].rayIntersection(ray, currentHit))
+		{
+			if(currentHit.mDistance < hit.mDistance)
+			{
+				hit = currentHit;
+			}
+		}
+	}
+
+	if(glm::dot(hit.mSurfaceNormal, ray.mDirection) > 0.0f)
+		hit.mSurfaceNormal *= -1.0f;
+
+	return hit.mDistance != std::numeric_limits<float>::infinity();
+}
+
+bool rt::SimpleRayTracer::Occluded(Scene* s, const Ray& ray, float distance)
+{
+	int triCount = s->m_Tris.size();
+	Tri* tris = &s->m_Tris[0];
+	for(int i = 0; i < triCount; ++i)
+	{
+		RayHit currentHit;
+		if(tris[i].rayIntersection(ray, currentHit))
+		{	
+			if(currentHit.mDistance < distance)
+				return true;
+		}
+	}
+
+	return false;
 }
 
 glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, const glm::vec3& n)
@@ -78,9 +93,15 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, co
 	glm::vec3 accumulatedColour = glm::vec3(0.0f);
 	
 	// Check all lights as if they were a point light for now
-	for(int l = 0; l < s->mLights.size(); ++l)
+	int numLights = s->mLights.size();
+	Light** lights = &s->mLights[0];
+
+	int numTris = s->m_Tris.size();
+	Tri* tris = &s->m_Tris[0];
+
+	for(int l = 0; l < numLights; ++l)
 	{
-		PointLight* light = (PointLight*)s->mLights[l];
+		PointLight* light = (PointLight*)lights[l];
 
 		// 1: Make sure the surface can see the light (normal check)
 		glm::vec3 toLight = light->mPosition - p;
@@ -90,21 +111,10 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, co
 		float dot = glm::clamp(glm::dot(n, toLight), 0.0f, 1.0f);
 		if(dot > 0.0f)
 		{
-			glm::vec3 biasPosition = p + n * 0.01f;
-			bool canSeeLight = true;
-			for(int i = 0; i < s->m_Tris.size() && canSeeLight; ++i)
-			{
-				float hitDistance;
-				glm::vec3 hitPosition;
-				glm::vec3 hitNormal;
-				if(s->m_Tris[i].rayIntersection(biasPosition, toLight, hitDistance, hitPosition, hitNormal))
-				{
-					if(hitDistance < d)
-						canSeeLight = false;
-				}
-			}
-
-			if(canSeeLight)
+			Ray r;
+			r.mOrigin = p + n * 0.01f;
+			r.mDirection = toLight;
+			if(!Occluded(s, r, d))
 			{
 				float intensity = glm::max(dot * light->intensity(d), 0.0f);
 

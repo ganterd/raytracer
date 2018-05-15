@@ -1,6 +1,8 @@
 #pragma once
 #include <glm/glm.hpp>
 
+#include <rt/scene/ray.hpp>
+
 namespace rt
 {
 	class Tri
@@ -30,31 +32,26 @@ namespace rt
 
 		}
 
-		bool rayIntersection(
-			const glm::vec3& origin,
-			const glm::vec3& direction,
-			float& outHitDistance,
-			glm::vec3& outHit,
-			glm::vec3& outNormal
-		){
+		bool rayIntersection(const Ray& r, RayHit& out)
+		{
 			const float e = 0.000001f;
 			glm::vec3 tvec, pvec, qvec;
 			float det, inv_det;
 
-			pvec = glm::cross(direction, edge2);
+			pvec = glm::cross(r.mDirection, edge2);
 			det = glm::dot(edge1, pvec);
 
 			if(det > -e && det < e)
 				return false;
 			inv_det = 1.0f / det;
 			
-			tvec = origin - v0;
+			tvec = r.mOrigin - v0;
 			float u = glm::dot(tvec, pvec) * inv_det;
 			if(u < 0.0f || u > 1.0f)
 				return false;
 
 			qvec = glm::cross(tvec, edge1);
-			float v = glm::dot(direction, qvec) * inv_det;
+			float v = glm::dot(r.mDirection, qvec) * inv_det;
 			if(v < 0.0f || (u + v > 1.0f))
 				return false;
 
@@ -62,9 +59,10 @@ namespace rt
 			if(d <= 0.0f)
 				return false;
 
-			outHitDistance = d;
-			outHit = origin + direction * outHitDistance;
-			outNormal = n0; //TMP just take n0 normal
+			out.mDistance = d;
+			out.mHitPosition = r.mOrigin + r.mDirection * d;
+			out.mSurfaceNormal = n0; //TMP just take n0 normal
+			out.mTri = this;
 			return true;
 		}
 	};

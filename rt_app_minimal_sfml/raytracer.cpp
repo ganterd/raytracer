@@ -51,10 +51,14 @@ int main (int argc, char* argv[])
 	int threadRenderIndex[threadCount];
 
 	std::cout << "Tracing..." << std::endl;
-	rt::Timer renderTimer;
-	renderTimer.start();
+	float actualRenderTime = 0.0f;
+	
+	
+	rt::Timer actualRenderTimer, renderAndCopyTimer;
+	renderAndCopyTimer.start();
 	while(window.isOpen() && currentRenderRegion.y <= renderRegions.y)
 	{
+		actualRenderTimer.start();
 		for(int t = 0; t < threadCount; ++t)
 		{
 			threads[t] = std::thread(RenderRegionThread, 
@@ -74,6 +78,7 @@ int main (int argc, char* argv[])
 		{
 			threads[t].join();
 		}
+		actualRenderTime += actualRenderTimer.stop();
 
 		buffer.Copy();
 		window.draw(buffer.m_SFMLSprite);
@@ -86,8 +91,8 @@ int main (int argc, char* argv[])
 				window.close();
 		}
 	}
-	renderTimer.end();
-	std::cout << "Done (" << renderTimer.getTime() << "s)" << std::endl;
+	renderAndCopyTimer.stop();
+	std::cout << "Done in " << renderAndCopyTimer.getTime() << "s (render " << actualRenderTime << "s)" << std::endl;
 
 	while(window.isOpen())
 	{
