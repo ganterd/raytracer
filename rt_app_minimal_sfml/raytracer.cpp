@@ -5,6 +5,7 @@
 
 #include <rt/scene/scene.hpp>
 #include <rt/tracers/simpletracer.hpp>
+#include <rt/utils/timer.hpp>
 
 #include "sfmlbuffer.hpp"
 
@@ -48,6 +49,10 @@ int main (int argc, char* argv[])
 	const int threadCount = 8;
 	std::thread threads[threadCount];
 	int threadRenderIndex[threadCount];
+
+	std::cout << "Tracing..." << std::endl;
+	rt::Timer renderTimer;
+	renderTimer.start();
 	while(window.isOpen() && currentRenderRegion.y <= renderRegions.y)
 	{
 		for(int t = 0; t < threadCount; ++t)
@@ -81,7 +86,8 @@ int main (int argc, char* argv[])
 				window.close();
 		}
 	}
-
+	renderTimer.end();
+	std::cout << "Done (" << renderTimer.getTime() << "s)" << std::endl;
 
 	while(window.isOpen())
 	{
