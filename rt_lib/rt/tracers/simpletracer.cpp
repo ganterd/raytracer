@@ -37,7 +37,7 @@ void rt::SimpleRayTracer::Trace(
 			glm::vec3 colour(0.0f);
 			if(Shoot(s, ray, hit))
 			{
-				colour = AccumulateLights(s, hit.mHitPosition, hit.mSurfaceNormal);
+				colour = AccumulateLights(s, hit);
 			}
 
 			colour = glm::pow(colour, glm::vec3(1.0f / 2.2f));
@@ -65,8 +65,15 @@ bool rt::SimpleRayTracer::Shoot(Scene* s, const Ray& ray, RayHit& hit)
 		}
 	}
 
-	if(glm::dot(hit.mSurfaceNormal, ray.mDirection) > 0.0f)
-		hit.mSurfaceNormal *= -1.0f;
+	if(hit.mTri)
+	{
+		hit.mInterpolatedNormal = hit.mTri->interpolatedNormal(hit.mHitPosition);
+		if(glm::dot(hit.mSurfaceNormal, ray.mDirection) > 0.0f)
+		{
+			hit.mSurfaceNormal *= -1.0f;
+			hit.mInterpolatedNormal *= -1.0f;
+		}
+	}
 
 	return hit.mDistance != std::numeric_limits<float>::infinity();
 }
@@ -88,7 +95,7 @@ bool rt::SimpleRayTracer::Occluded(Scene* s, const Ray& ray, float distance)
 	return false;
 }
 
-glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, const glm::vec3& n)
+glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const RayHit& p)
 {
 	glm::vec3 accumulatedColour = glm::vec3(0.0f);
 	
@@ -104,15 +111,15 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const glm::vec3& p, co
 		PointLight* light = (PointLight*)lights[l];
 
 		// 1: Make sure the surface can see the light (normal check)
-		glm::vec3 toLight = light->mPosition - p;
+		glm::vec3 toLight = light->mPosition - p.mHitPosition;
 
 		float d = glm::length(toLight);
 		toLight = glm::normalize(toLight);
-		float dot = glm::clamp(glm::dot(n, toLight), 0.0f, 1.0f);
+		float dot = glm::clamp(glm::dot(p.mInterpolatedNormal, toLight), 0.0f, 1.0f);
 		if(dot > 0.0f)
 		{
 			Ray r;
-			r.mOrigin = p + n * 0.01f;
+			r.mOrigin = p.mHitPosition + p.mSurfaceNormal * 0.01f;
 			r.mDirection = toLight;
 			if(!Occluded(s, r, d))
 			{

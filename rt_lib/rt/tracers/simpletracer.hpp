@@ -10,7 +10,7 @@ namespace rt
 		void Trace(Scene* s, Buffer* b);
 		void Trace(Scene* s, Buffer* b,	glm::ivec2 renderRegionMin,	glm::ivec2 renderRegionMax);
 
-		glm::vec3 AccumulateLights(Scene* s, const glm::vec3& p, const glm::vec3& n);
+		glm::vec3 AccumulateLights(Scene* s, const RayHit& p);
 		bool Shoot(Scene* s, const Ray& ray, RayHit& hit);
 		bool Occluded(Scene* s, const Ray& ray, float d);
 	};

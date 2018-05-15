@@ -34,8 +34,8 @@ int main (int argc, char* argv[])
 
 
 
-	const glm::ivec2 bufferSize(960,540);
-	//const glm::ivec2 bufferSize(640, 360);
+	//const glm::ivec2 bufferSize(960,540);
+	const glm::ivec2 bufferSize(640, 360);
 	const glm::ivec2 renderRegionSize(8, 8);
 	glm::ivec2 renderRegions(bufferSize / renderRegionSize);
 	renderRegions.x += (bufferSize.x % renderRegionSize.x != 0 ? 1 : 0);

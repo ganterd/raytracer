@@ -25,6 +25,7 @@ namespace rt
         float mDistance;
         glm::vec3 mHitPosition;
         glm::vec3 mSurfaceNormal;
+        glm::vec3 mInterpolatedNormal;
         Tri* mTri;
     };
 }
