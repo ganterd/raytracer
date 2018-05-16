@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 
 #include <rt/scene/ray.hpp>
+#include <rt/scene/aabb.hpp>
 
 namespace rt
 {
@@ -9,11 +10,13 @@ namespace rt
 	{
 	public:
 		glm::vec3 v0, v1, v2;
+		glm::vec3 centroid;
 		glm::vec3 n0, n1, n2;
 		glm::vec3 averagedNormal;
 		glm::vec3 edge1, edge2;
 		glm::vec2 min;
 		glm::vec2 max;
+		AABB aabb;
 
 		Tri(
 			const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2,
@@ -33,6 +36,10 @@ namespace rt
 			edge1 = v1 - v0;
 			edge2 = v2 - v0;
 
+			aabb.mMin = glm::min(glm::min(v0, v1), v2);
+			aabb.mMax = glm::max(glm::max(v0, v1), v2);
+
+			centroid = (v0 + v1 + v2) / 3.0f;
 		}
 
 		bool rayIntersection(const Ray& r, RayHit& out)
@@ -71,6 +78,7 @@ namespace rt
 
 		glm::vec3 interpolatedNormal(const glm::vec3& p)
 		{
+			/* TODO: Can optimize this by precalculations */
 			glm::vec3 v = p - v0;
 			float d00 = glm::dot(edge1, edge1);
 			float d01 = glm::dot(edge1, edge2);

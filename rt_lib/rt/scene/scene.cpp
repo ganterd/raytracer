@@ -12,6 +12,9 @@ bool rt::Scene::fromFile(const std::string& file)
 		return false;
 	}
 
+	mCentroidsAABB.mMin = glm::vec3(std::numeric_limits<float>::max());
+	mCentroidsAABB.mMax = glm::vec3(std::numeric_limits<float>::min());
+
 	m_TotalTris = 0;
 
 	std::cout << "Scene:" << std::endl;
@@ -21,6 +24,9 @@ bool rt::Scene::fromFile(const std::string& file)
 	NodeRecurse(assimpScene->mRootNode, identity);
 
 	std::cout << "   |- Total Tris: " << m_TotalTris << std::endl;
+	std::cout << "   |- Centroid AABB ";
+	std::cout << "[" << mCentroidsAABB.mMin.x << "," << mCentroidsAABB.mMin.y << "," << mCentroidsAABB.mMin.z << "]->";
+	std::cout << "[" << mCentroidsAABB.mMax.x << "," << mCentroidsAABB.mMax.y << "," << mCentroidsAABB.mMax.z << "]" << std::endl;
 
 	ProcessLights();
 	std::cout << "   |- Cameras: " << assimpScene->mNumCameras << std::endl;
@@ -65,10 +71,10 @@ void rt::Scene::ProcessMesh(aiMesh* m, const aiMatrix4x4& transform)
 		n1 = mat * glm::vec4(AssimpToGLM(m->mNormals[m->mFaces[t].mIndices[1]]), 0.0f);
 		n2 = mat * glm::vec4(AssimpToGLM(m->mNormals[m->mFaces[t].mIndices[2]]), 0.0f);
 
-		m_Tris.push_back(Tri(
-			glm::vec3(v0), glm::vec3(v1), glm::vec3(v2), 
-			glm::vec3(n0), glm::vec3(n1), glm::vec3(n2)
-		));	
+		Tri tri = Tri(glm::vec3(v0), glm::vec3(v1), glm::vec3(v2), glm::vec3(n0), glm::vec3(n1), glm::vec3(n2));
+		m_Tris.push_back(tri);
+
+		mCentroidsAABB.grow(tri.centroid);
 	}
 	m_TotalTris += tris;
 

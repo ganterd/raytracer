@@ -5,12 +5,13 @@
 
 #include <rt/scene/scene.hpp>
 #include <rt/tracers/simpletracer.hpp>
+#include <rt/tracers/bvhtracer.hpp>
 #include <rt/utils/timer.hpp>
 
 #include "sfmlbuffer.hpp"
 
 void RenderRegionThread(
-	rt::SimpleRayTracer* tracer,
+	rt::BVHRayTracer* tracer,
 	rt::Scene* scene,
 	rt::Buffer* buffer,
 	glm::ivec2 renderRegionMin,
@@ -44,7 +45,8 @@ int main (int argc, char* argv[])
 	
 	sf::RenderWindow window(sf::VideoMode(bufferSize.x, bufferSize.y), "Raytracer");
 	rt::SFMLBuffer buffer(bufferSize.x, bufferSize.y);
-	rt::SimpleRayTracer tracer;
+	rt::BVHRayTracer tracer;
+	tracer.init(&scene);
 
 	const int threadCount = 8;
 	std::thread threads[threadCount];

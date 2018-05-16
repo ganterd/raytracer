@@ -27,6 +27,8 @@ namespace rt
 		std::vector<Tri> m_Tris;
 		std::vector<Light*> mLights;
 
+		AABB mCentroidsAABB;
+
 		Camera* mCamera;
 
 		size_t m_TotalTris;
