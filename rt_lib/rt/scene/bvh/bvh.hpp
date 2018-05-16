@@ -38,6 +38,12 @@ namespace rt
 
         void construct(rt::Scene* scene);
 
+    private:
+        Bin** mBins;
+        void createBins();
+        void freeBins();
+
+        rt::BVHNode* recursiveConstruct(const std::vector<Tri*>& tris, const AABB& centroidAABB);
     };
 
     
