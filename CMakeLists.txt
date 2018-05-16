@@ -25,9 +25,9 @@ ExternalProject_Add(
 #		-DASSIMP_BUILD_TESTS=Off
 #)
 
-set(ASSIMP_NO_EXPORT On)
-set(ASSIMP_BUILD_ASSIMP_TOOLS Off)
-set(ASSIMP_BUILD_TESTS Off)
+set(ASSIMP_NO_EXPORT ON CACHE BOOL "")
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "")
+set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "")
 
 add_subdirectory(external/glm)
 add_subdirectory(external/assimp)
@@ -35,6 +35,9 @@ add_subdirectory(external/assimp)
 include_directories(external/glm)
 include_directories(external/assimp/include)
 include_directories(${CMAKE_BINARY_DIR}/external/assimp/include)
+
+
+
 
 find_package(Threads)
 

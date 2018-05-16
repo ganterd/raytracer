@@ -8,7 +8,8 @@ namespace rt
     {
     public:
         bool mIsLeaf;
-        BVHNode* mChildren[2];
+        BVHNode* mLeft;
+        BVHNode* mRight;
 
         BVHNode()
         {
@@ -25,6 +26,7 @@ namespace rt
 
         BVHLeafNode()
         {
+            mNumTris = 0;
             mIsLeaf = true;
         }
     };

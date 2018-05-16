@@ -3,6 +3,7 @@
 #include <rt/scene/scene.hpp>
 #include <rt/scene/aabb.hpp>
 #include <rt/scene/bvh/bvhnode.hpp>
+#include <rt/utils/timer.hpp>
 
 namespace rt
 {
@@ -16,7 +17,8 @@ namespace rt
         struct Bin
         {
             std::vector<Tri*> mTris;
-            AABB mAABB;
+            rt::AABB mAABB;
+            rt::AABB mCentroidsAABB;
 
             // Centroid bounds
             float mLeft;
@@ -24,8 +26,8 @@ namespace rt
 
             Bin()
             {
-                mAABB.mMin = glm::vec3(+std::numeric_limits<float>::infinity());
-                mAABB.mMax = glm::vec3(-std::numeric_limits<float>::infinity());
+                mAABB = rt::AABB::infinity();
+                mCentroidsAABB = rt::AABB::infinity();
             }
         };
 
@@ -42,8 +44,26 @@ namespace rt
         Bin** mBins;
         void createBins();
         void freeBins();
+        int deepestLevel;
+        int numSplitNodes;
+        int numLeafNodes;
 
-        rt::BVHNode* recursiveConstruct(const std::vector<Tri*>& tris, const AABB& centroidAABB);
+        rt::BVHNode* recursiveConstruct(Tri** tris, int numTris, const AABB& centroidAABB, int level);
+
+        typedef struct
+        {
+            int axis;
+            int splitIndex;
+            float cost = std::numeric_limits<float>::infinity();
+            
+            rt::AABB AABBLeft;
+            rt::AABB AABBRight;
+            rt::AABB centroidAABB_L;
+            rt::AABB centroidAABB_R;
+            int numPrimitives_L;
+            int numPrimitives_R;
+        } BestSplit;
+        BestSplit findBestSplit();
     };
 
     
