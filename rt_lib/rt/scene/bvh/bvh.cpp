@@ -2,7 +2,7 @@
 
 rt::BVH::BVH()
 {
-    mNumBins = 512;
+    mNumBins = 1024;
     mRoot = nullptr;
     mTargetScene = nullptr;
 }
@@ -90,6 +90,8 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
             mBins[axis][b].mTris.clear();
             mBins[axis][b].mLeft = centroidAABB.mMax[axis] + (float)b * sizePerBin;
             mBins[axis][b].mRight = mBins[axis][b].mLeft + sizePerBin;
+            mBins[axis][b].mAABB = rt::AABB::infinity();
+            mBins[axis][b].mCentroidsAABB = rt::AABB::infinity();
         }
     }
 
@@ -99,7 +101,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
         Tri* tri = tris[t];
         for(int axis = 0; axis < 3; ++axis)
         {
-            int axisBin = (float)mNumBins * (( 0.999999f * (tri->centroid[axis] - centroidAABB.mMin[axis])) / aabbSize[axis]);
+            int axisBin = (float)mNumBins * (( 0.9999f * (tri->centroid[axis] - centroidAABB.mMin[axis])) / aabbSize[axis]);
             mBins[axis][axisBin].mTris.push_back(tri);
             mBins[axis][axisBin].mAABB.grow(tri->aabb);
             mBins[axis][axisBin].mCentroidsAABB.grow(tri->centroid);
@@ -107,7 +109,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     }
 
     // Find the best split
-    BestSplit best = findBestSplit();
+    BVHBestSplit best = findBestSplit();
 
     // Gather tris from left and right splits
     Tri** trisLeft = new Tri*[best.numPrimitives_L];
@@ -145,9 +147,9 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     return n;
 }
 
-rt::BVH::BestSplit rt::BVH::findBestSplit()
+rt::BVHBestSplit rt::BVH::findBestSplit()
 {
-    BestSplit best;
+    BVHBestSplit best;
 
     // Sweep from the right (on all axes) to generate the accumulated AABBs and costs
     rt::AABB totalAABBRight[3][mNumBins - 1];
@@ -197,14 +199,17 @@ rt::BVH::BestSplit rt::BVH::findBestSplit()
         int bRight = b + 1;
         for(int ax = 0; ax < 3; ++ax)
         {
+            // Accumulate the AABBs and primitives count of the left bins
             totalAABBLeft[ax].grow(mBins[ax][b].mAABB);
             totalCentroidAABBLeft[ax].grow(mBins[ax][b].mCentroidsAABB);
             totalPrimitivesLeft[ax] += mBins[ax][b].mTris.size();
 
+            // Determine the cost of this split
             float costLeft = totalAABBLeft[ax].surfaceArea() * (float)totalPrimitivesLeft[ax];
             float costRight = totalAABBRight[ax][bRight].surfaceArea() * (float)totalPrimitivesRight[ax][bRight];
             float cost = costLeft + costRight;
             
+            // Replace teh current best cose with this one
             if(cost < best.cost && totalPrimitivesLeft[ax] > 0 && totalPrimitivesRight[ax][bRight] > 0)
             {
                 best.cost = cost;

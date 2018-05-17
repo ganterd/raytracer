@@ -11,7 +11,7 @@
 #include "sfmlbuffer.hpp"
 
 void RenderRegionThread(
-	rt::BVHRayTracer* tracer,
+	rt::RayTracer* tracer,
 	rt::Scene* scene,
 	rt::Buffer* buffer,
 	glm::ivec2 renderRegionMin,
@@ -35,8 +35,8 @@ int main (int argc, char* argv[])
 
 
 
-	//const glm::ivec2 bufferSize(960,540);
-	const glm::ivec2 bufferSize(640, 360);
+	const glm::ivec2 bufferSize(960,540);
+	//const glm::ivec2 bufferSize(640, 360);
 	const glm::ivec2 renderRegionSize(8, 8);
 	glm::ivec2 renderRegions(bufferSize / renderRegionSize);
 	renderRegions.x += (bufferSize.x % renderRegionSize.x != 0 ? 1 : 0);
@@ -46,6 +46,7 @@ int main (int argc, char* argv[])
 	sf::RenderWindow window(sf::VideoMode(bufferSize.x, bufferSize.y), "Raytracer");
 	rt::SFMLBuffer buffer(bufferSize.x, bufferSize.y);
 	rt::BVHRayTracer tracer;
+	//rt::SimpleRayTracer tracer;
 	tracer.init(&scene);
 
 	const int threadCount = 8;

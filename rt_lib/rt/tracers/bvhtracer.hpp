@@ -2,10 +2,11 @@
 #include <rt/scene/ray.hpp>
 #include <rt/buffer/buffer.hpp>
 #include <rt/scene/bvh/bvh.hpp>
+#include <rt/tracers/tracer.hpp>
 
 namespace rt
 {
-	class BVHRayTracer
+	class BVHRayTracer : public rt::RayTracer
 	{
 	private:
 		rt::Scene* mTargetScene;

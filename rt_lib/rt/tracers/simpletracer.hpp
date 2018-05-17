@@ -1,10 +1,11 @@
 #include <rt/scene/scene.hpp>
 #include <rt/scene/ray.hpp>
 #include <rt/buffer/buffer.hpp>
+#include <rt/tracers/tracer.hpp>
 
 namespace rt
 {
-	class SimpleRayTracer
+	class SimpleRayTracer : public rt::RayTracer
 	{
 	public:
 		void Trace(Scene* s, Buffer* b);
