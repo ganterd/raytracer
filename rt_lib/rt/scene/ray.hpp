@@ -10,7 +10,15 @@ namespace rt
     {
     public:
         glm::vec3 mOrigin;
-        glm::vec3 mDirection;  
+        glm::vec3 mDirection;
+        glm::vec3 mInverseDirection;
+
+        Ray(const glm::vec3& o, const glm::vec3& d)
+        {
+            mOrigin = o;
+            mDirection = d;
+            mInverseDirection = 1.0f / d;
+        }
     };
 
     class Tri;

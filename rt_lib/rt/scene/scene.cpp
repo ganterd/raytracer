@@ -12,8 +12,8 @@ bool rt::Scene::fromFile(const std::string& file)
 		return false;
 	}
 
-	mCentroidsAABB.mMin = glm::vec3(std::numeric_limits<float>::max());
-	mCentroidsAABB.mMax = glm::vec3(std::numeric_limits<float>::min());
+	mGeometryAABB = rt::AABB::infinity();
+	mCentroidsAABB = rt::AABB::infinity();
 
 	m_TotalTris = 0;
 
@@ -24,9 +24,8 @@ bool rt::Scene::fromFile(const std::string& file)
 	NodeRecurse(assimpScene->mRootNode, identity);
 
 	std::cout << "   |- Total Tris: " << m_TotalTris << std::endl;
-	std::cout << "   |- Centroid AABB ";
-	std::cout << "[" << mCentroidsAABB.mMin.x << "," << mCentroidsAABB.mMin.y << "," << mCentroidsAABB.mMin.z << "]->";
-	std::cout << "[" << mCentroidsAABB.mMax.x << "," << mCentroidsAABB.mMax.y << "," << mCentroidsAABB.mMax.z << "]" << std::endl;
+	std::cout << "   |- Centroid AABB " << mCentroidsAABB << std::endl;
+	std::cout << "   |- Geometry AABB " << mGeometryAABB << std::endl;
 
 	ProcessLights();
 	std::cout << "   |- Cameras: " << assimpScene->mNumCameras << std::endl;
@@ -75,6 +74,7 @@ void rt::Scene::ProcessMesh(aiMesh* m, const aiMatrix4x4& transform)
 		m_Tris.push_back(tri);
 
 		mCentroidsAABB.grow(tri.centroid);
+		mGeometryAABB.grow(tri.aabb);
 	}
 	m_TotalTris += tris;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rt/scene/scene.hpp>
+#include <rt/scene/aabb.hpp>
 
 namespace rt
 {
@@ -10,10 +11,12 @@ namespace rt
         bool mIsLeaf;
         BVHNode* mLeft;
         BVHNode* mRight;
+        rt::AABB mAABB;
 
         BVHNode()
         {
             mIsLeaf = false;
+            mAABB = rt::AABB::infinity();
         }
     };
 
@@ -28,6 +31,7 @@ namespace rt
         {
             mNumTris = 0;
             mIsLeaf = true;
+            mAABB = rt::AABB::infinity();
         }
     };
 }

@@ -15,6 +15,8 @@ void rt::SimpleRayTracer::Trace(
 	glm::ivec2 renderRegionMin, 
 	glm::ivec2 renderRegionMax
 ){
+	if(!s->mCamera)
+		return;
 	s->mCamera->SetAspectRatio((float)b->mSizex / (float)b->mSizey);
 
 	renderRegionMax.x = glm::min(renderRegionMax.x, b->mSizex);
@@ -25,12 +27,7 @@ void rt::SimpleRayTracer::Trace(
 	{
 		for(int x = renderRegionMin.x; x < renderRegionMax.x; ++x)
 		{
-			Ray ray;
-			if(s->mCamera)
-			{
-				ray.mDirection = s->mCamera->Ray(x, y, b->mSizex, b->mSizey);
-				ray.mOrigin = s->mCamera->mPosition;
-			}
+			Ray ray = s->mCamera->Ray(x, y, b->mSizex, b->mSizey);
 			
 			// Really really simple brute force. I'll make this better. I promise.
 			RayHit hit;
@@ -118,9 +115,7 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const RayHit& p)
 		float dot = glm::clamp(glm::dot(p.mInterpolatedNormal, toLight), 0.0f, 1.0f);
 		if(dot > 0.0f)
 		{
-			Ray r;
-			r.mOrigin = p.mHitPosition + p.mSurfaceNormal * 0.01f;
-			r.mDirection = toLight;
+			Ray r(p.mHitPosition + p.mSurfaceNormal * 0.01f, toLight);
 			if(!Occluded(s, r, d))
 			{
 				float intensity = glm::max(dot * light->intensity(d), 0.0f);

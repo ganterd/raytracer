@@ -29,7 +29,7 @@ void rt::BVH::construct(rt::Scene* scene)
     createBins();
     rt::Timer constructionTimer;
     constructionTimer.start();
-    recursiveConstruct(tris, scene->m_Tris.size(), scene->mCentroidsAABB, 0);
+    mRoot = recursiveConstruct(tris, scene->m_Tris.size(), scene->mCentroidsAABB, 0);
     constructionTimer.stop();
     freeBins();
 
@@ -38,6 +38,7 @@ void rt::BVH::construct(rt::Scene* scene)
     std::cout << "|- Deepest Level: " << deepestLevel << std::endl;
     std::cout << "|- Split Nodes: " << numSplitNodes << std::endl;
     std::cout << "|- Leaf Nodes: " << numLeafNodes << std::endl;
+    std::cout << "|- Top AABB :" << mRoot->mAABB << std::endl;
     
     mTargetScene = scene;
 }
@@ -72,9 +73,10 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
         for(int i = 0; i < numTris; ++i)
         {
             n->mTris[n->mNumTris++] = tris[i];
+            n->mAABB.grow(tris[i]->aabb);
         }
         numLeafNodes++;
-        return NULL;
+        return n;
     }
 
     glm::vec3 aabbSize = centroidAABB.mMax - centroidAABB.mMin;
@@ -135,6 +137,10 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     BVHNode* n = new BVHNode();
     n->mLeft = recursiveConstruct(trisLeft, best.numPrimitives_L, best.centroidAABB_L, level + 1);
     n->mRight = recursiveConstruct(trisRight, best.numPrimitives_R, best.centroidAABB_R, level + 1);
+
+    n->mAABB.grow(n->mLeft->mAABB);
+    n->mAABB.grow(n->mRight->mAABB);
+    
     numSplitNodes++;
     return n;
 }
@@ -188,6 +194,7 @@ rt::BVH::BestSplit rt::BVH::findBestSplit()
 
     for(int b = 1; b < mNumBins - 1; ++b)
     {
+        int bRight = b + 1;
         for(int ax = 0; ax < 3; ++ax)
         {
             totalAABBLeft[ax].grow(mBins[ax][b].mAABB);
@@ -195,20 +202,20 @@ rt::BVH::BestSplit rt::BVH::findBestSplit()
             totalPrimitivesLeft[ax] += mBins[ax][b].mTris.size();
 
             float costLeft = totalAABBLeft[ax].surfaceArea() * (float)totalPrimitivesLeft[ax];
-            float costRight = totalAABBRight[ax][b + 1].surfaceArea() * (float)totalPrimitivesRight[ax][b + 1];
+            float costRight = totalAABBRight[ax][bRight].surfaceArea() * (float)totalPrimitivesRight[ax][bRight];
             float cost = costLeft + costRight;
             
-            if(cost < best.cost && totalPrimitivesLeft[ax] > 0)
+            if(cost < best.cost && totalPrimitivesLeft[ax] > 0 && totalPrimitivesRight[ax][bRight] > 0)
             {
                 best.cost = cost;
                 best.axis = ax;
                 best.splitIndex = b;
                 best.AABBLeft = totalAABBLeft[ax];
-                best.AABBRight = totalAABBRight[ax][b + 1];
+                best.AABBRight = totalAABBRight[ax][bRight];
                 best.centroidAABB_L = totalCentroidAABBLeft[ax];
-                best.centroidAABB_R = totalCentroidAABBRight[ax][b + 1];
+                best.centroidAABB_R = totalCentroidAABBRight[ax][bRight];
                 best.numPrimitives_L = totalPrimitivesLeft[ax];
-                best.numPrimitives_R = totalPrimitivesRight[ax][b + 1];
+                best.numPrimitives_R = totalPrimitivesRight[ax][bRight];
             }
         }
     }

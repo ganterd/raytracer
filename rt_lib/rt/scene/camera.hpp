@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <rt/scene/ray.hpp>
+
 namespace rt
 {
 	class Camera
@@ -46,7 +48,7 @@ namespace rt
 		}
 			
 
-		glm::vec3 Ray(int x, int y, int vpx, int vpy)
+		rt::Ray Ray(int x, int y, int vpx, int vpy)
 		{
 			glm::vec3 p = glm::unProject(
 				glm::vec3(x, y, 0.001f),
@@ -57,8 +59,7 @@ namespace rt
 
 			//p = glm::vec3(glm::vec4(p.x, p.y, p.z, 0.0f) * mLookAtInvMatrix);
 			
-
-			return glm::normalize(p - mPosition);
+			return rt::Ray(mPosition, glm::normalize(p - mPosition));
 		}
 
 		void SetAspectRatio(float a)

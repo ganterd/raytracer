@@ -19,6 +19,7 @@ namespace rt
 	private:
 		glm::vec3 AccumulateLights(Scene* s, const RayHit& p);
 		bool Shoot(Scene* s, const Ray& ray, RayHit& hit);
+		bool BVHTraversal(rt::BVHNode* n, const rt::Ray& ray, rt::RayHit& hit);
 		bool Occluded(Scene* s, const Ray& ray, float d);
 	};
 }
