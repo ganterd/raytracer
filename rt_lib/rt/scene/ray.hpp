@@ -28,6 +28,7 @@ namespace rt
         RayHit()
         {
             mDistance = std::numeric_limits<float>::max();
+            mTri = nullptr;
         }
 
         float mDistance;

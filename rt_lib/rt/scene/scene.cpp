@@ -102,17 +102,8 @@ void rt::Scene::ProcessCamera(aiCamera* c)
 	aiMatrix3x3 rotationMatrix(ct);
 
 	cp *= ct;
-	cl *= ct;//rotationMatrix;
+	cl *= ct;
 	cu *= rotationMatrix;
-
-//	mCamera = new Camera(
-//		glm::vec3(-20,20,20),//glm::vec3(cp.x, cp.y, cp.z), 
-//		glm::vec3(0,0,0),//glm::vec3(cl.x, cl.y, cl.z), 
-//		glm::vec3(0,0,1),//glm::vec3(cu.x, cu.y, cu.z), 
-//		c->mAspect, 
-//		glm::degrees(c->mHorizontalFOV)
-//	);
-
 
 	mCamera = new Camera(
 		glm::vec3(cp.x, cp.y, cp.z), 
@@ -195,16 +186,28 @@ void rt::Scene::ProcessLights()
 		std::cout << "         |- Atten1: " << atten1 << std::endl;
 		std::cout << "         |- Atten2: " << atten2 << std::endl;
 
-		// TMP: For now everything is a point light;
-		PointLight* light = new PointLight(
-			glm::vec3(pos.x, pos.y, pos.z),
-			glm::vec3(diff.r, diff.g, diff.b),
-			glm::vec3(spec.r, spec.g, spec.b),
-			glm::vec3(amb.r, amb.g, amb.b)
-		);
-		light->mAttenuationConstant = atten0;
-		light->mAttenuationLinear = atten1;
-		light->mAttenuationQuadratic = atten2;
+		Light* light;
+		if(l->mType == aiLightSource_AREA)
+		{
+			light = new AreaLight(
+				glm::vec3(pos.x, pos.y, pos.z),
+				glm::vec3(dir.x, dir.y, dir.z),
+				glm::vec3(up.x, up.y, up.z),
+				glm::vec2(area.x, area.y),
+				glm::vec3(diff.r, diff.g, diff.b),
+				glm::vec3(spec.r, spec.g, spec.b),
+				glm::vec3(amb.r, amb.g, amb.b)
+			);
+		}
+		else
+		{
+			light = new PointLight(
+				glm::vec3(pos.x, pos.y, pos.z),
+				glm::vec3(diff.r, diff.g, diff.b),
+				glm::vec3(spec.r, spec.g, spec.b),
+				glm::vec3(amb.r, amb.g, amb.b)
+			);
+		}
 		mLights.push_back(light);
 	}
 }
