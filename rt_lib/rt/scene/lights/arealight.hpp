@@ -11,10 +11,9 @@ namespace rt
 		glm::vec3 mDirection;
 		glm::vec3 mUp;
 		glm::vec2 mSize;
-		static const int mNumSamplePositionsX = 8;
-		static const int mNumSamplePositionsY = 8;
-		static const int mNumSamplePositions = mNumSamplePositionsX * mNumSamplePositionsY;
-		glm::vec3 mSamplePositions[mNumSamplePositions];
+		static const int mNumSamplePositionsPerUnit = 2;
+		int mNumSamplePositions;
+		glm::vec3* mSamplePositions;
 		glm::vec3 mColourDiffuse;
 		glm::vec3 mColourSpecular;
 		glm::vec3 mColourAmbient;
@@ -22,6 +21,11 @@ namespace rt
 		AreaLight()
 		{
 			mType = Point;
+		}
+
+		~AreaLight()
+		{
+			delete[] mSamplePositions;
 		}
 
 		AreaLight(
@@ -44,15 +48,20 @@ namespace rt
 			mColourSpecular = colourSpecular;
 
 			glm::vec3 left = glm::cross(mDirection, mUp);
-			float dx = mSize.x / (float)mNumSamplePositionsX;
-			float dy = mSize.y / (float)mNumSamplePositionsY;
-			for(int x = 0; x < mNumSamplePositionsX; ++x)
+			int numSamplePositionsX = mSize.x * (float)mNumSamplePositionsPerUnit + 1.0f;
+			int numSamplePositionsY = mSize.y * (float)mNumSamplePositionsPerUnit + 1.0f;
+			mNumSamplePositions = numSamplePositionsX * numSamplePositionsY;
+			mSamplePositions = new glm::vec3[mNumSamplePositions];
+			std::cout << "[" << numSamplePositionsX << "," << numSamplePositionsY << "]" << std::endl;
+			float dx = mSize.x / (float)numSamplePositionsX;
+			float dy = mSize.y / (float)numSamplePositionsY;
+			for(int x = 0; x < numSamplePositionsX; ++x)
 			{
 				float px = mSize.x * -0.5f + (float)x * dx;
-				for(int y = 0; y < mNumSamplePositionsY; ++y)
+				for(int y = 0; y < numSamplePositionsY; ++y)
 				{
 					float py = mSize.y * -0.5f + (float)y * dy;
-					mSamplePositions[x + y * mNumSamplePositionsX] = mPosition + left * px + mUp * py;
+					mSamplePositions[x + y * numSamplePositionsX] = mPosition + left * px + mUp * py;
 				}
 			}
 		}

@@ -22,22 +22,37 @@ void RenderRegionThread(
 
 int main (int argc, char* argv[])
 {
-	std::cout << "Running..." << std::endl;
-
-	if(argc < 2)
-	{
-		std::cerr << "Need file path argument." << std::endl;
-		return -1;
-	}
-
 	rt::Scene scene;
 	scene.fromFile(std::string(argv[1]));
 
+	rt::BVHRayTracer tracer;
 
+	int threadCount = 8;
+	glm::ivec2 bufferSize(960, 540);
+	glm::ivec2 renderRegionSize(16, 16);
 
-	const glm::ivec2 bufferSize(960,540);
+	for(int i = 2; i < argc; ++i)
+	{
+		std::string arg(argv[i]);
+		std::string param = i + 1 < argc ? argv[i + 1] : "";		
+		if(arg == "-b")
+			tracer.mSettings.bounces = std::stoi(param);
+		else if(arg == "-bs")
+			tracer.mSettings.bounceSamples = std::stoi(param);
+		else if(arg == "-t")
+			threadCount = std::stoi(param);
+		else if(arg == "-bsx")
+			bufferSize.x = std::stoi(param);
+		else if(arg == "-bsy")
+			bufferSize.y = std::stoi(param);
+		else if(arg == "-rsx")
+			renderRegionSize.x = std::stoi(param);
+		else if(arg == "-rsy")
+			renderRegionSize.y = std::stoi(param);
+	}
+
 	//const glm::ivec2 bufferSize(640, 360);
-	const glm::ivec2 renderRegionSize(4, 4);
+	
 	glm::ivec2 renderRegions(bufferSize / renderRegionSize);
 	renderRegions.x += (bufferSize.x % renderRegionSize.x != 0 ? 1 : 0);
 	renderRegions.y += (bufferSize.y % renderRegionSize.y != 0 ? 1 : 0);
@@ -45,13 +60,13 @@ int main (int argc, char* argv[])
 	
 	sf::RenderWindow window(sf::VideoMode(bufferSize.x, bufferSize.y), "Raytracer");
 	rt::SFMLBuffer buffer(bufferSize.x, bufferSize.y);
-	rt::BVHRayTracer tracer;
+	
 	//rt::SimpleRayTracer tracer;
 	tracer.init(&scene);
 
-	const int threadCount = 8;
-	std::thread threads[threadCount];
-	int threadRenderIndex[threadCount];
+	
+	std::thread* threads = new std::thread[threadCount];
+	int* threadRenderIndex = new int[threadCount];
 
 	std::cout << "Tracing..." << std::endl;
 	float actualRenderTime = 0.0f;
@@ -95,6 +110,8 @@ int main (int argc, char* argv[])
 		}
 	}
 	renderAndCopyTimer.stop();
+	delete[] threads;
+	delete[] threadRenderIndex;
 	std::cout << "Done in " << renderAndCopyTimer.getTime() << "s (render " << actualRenderTime << "s)" << std::endl;
 
 	while(window.isOpen())

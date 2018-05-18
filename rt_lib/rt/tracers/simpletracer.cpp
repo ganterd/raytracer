@@ -21,7 +21,6 @@ void rt::SimpleRayTracer::Trace(
 
 	renderRegionMax.x = glm::min(renderRegionMax.x, b->mSizex);
 	renderRegionMax.y = glm::min(renderRegionMax.y, b->mSizey);
-	const float maxDepth = 10000.0f;
 
 	for(int y = renderRegionMin.y; y < renderRegionMax.y; ++y)
 	{
@@ -99,9 +98,6 @@ glm::vec3 rt::SimpleRayTracer::AccumulateLights(Scene* s, const RayHit& p)
 	// Check all lights as if they were a point light for now
 	int numLights = s->mLights.size();
 	Light** lights = &s->mLights[0];
-
-	int numTris = s->m_Tris.size();
-	Tri* tris = &s->m_Tris[0];
 
 	for(int l = 0; l < numLights; ++l)
 	{

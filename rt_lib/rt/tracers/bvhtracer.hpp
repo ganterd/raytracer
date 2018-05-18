@@ -17,7 +17,7 @@ namespace rt
 		rt::Scene* mTargetScene;
 		rt::BVH bvh;
 
-		const int mMaxBounces = 0;
+		const int mMaxBounces = 2;
 		const int mBounceSamples = 8;
 
 	public:
@@ -26,9 +26,8 @@ namespace rt
 		void Trace(Scene* s, Buffer* b,	glm::ivec2 renderRegionMin,	glm::ivec2 renderRegionMax);
 
 	private:
-		glm::vec3 AccumulateLights(Scene* s, const RayHit& p, int depth = 0);
-		bool Shoot(Scene* s, const Ray& ray, RayHit& hit);
-		bool BVHTraversal(rt::BVHNode* n, const rt::Ray& ray, rt::RayHit& hit);
-		bool Occluded(Scene* s, const Ray& ray, float d);
+		glm::vec3 AccumulateLights(const RayHit& p, int depth = 0);
+		bool Shoot(const Ray& ray, RayHit& hit);
+		bool Occluded(const Ray& ray, float d);
 	};
 }

@@ -60,13 +60,23 @@ namespace rt
 
         void construct(rt::Scene* scene);
 
+        bool cast(const rt::Ray& r, rt::RayHit& hit);
+        bool cast(BVHNode* n, const rt::Ray& r, rt::RayHit& hit);
+
+        bool occluded(const rt::Ray& ray, const float distance);
+        bool occluded(BVHNode* n, const rt::Ray& ray, const float distance);
+
     private:
-        Bin** mBins;
+        rt::BVH::Bin** mBins;
         void createBins();
         void freeBins();
         int deepestLevel;
         int numSplitNodes;
         int numLeafNodes;
+
+        rt::AABB** totalAABBRight;
+        rt::AABB** totalCentroidAABBRight;
+        int** totalPrimitivesRight;
 
         rt::BVHNode* recursiveConstruct(Tri** tris, int numTris, const AABB& centroidAABB, int level);
 

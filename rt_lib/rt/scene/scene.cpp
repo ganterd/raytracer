@@ -39,12 +39,12 @@ bool rt::Scene::fromFile(const std::string& file)
 void rt::Scene::NodeRecurse(aiNode* n, const aiMatrix4x4& t)
 {
 	aiMatrix4x4 currentTransform =  n->mTransformation * t;
-	for(int m = 0; m < n->mNumMeshes; ++m)
+	for(unsigned int m = 0; m < n->mNumMeshes; ++m)
 	{
 		ProcessMesh(assimpScene->mMeshes[n->mMeshes[m]], currentTransform);
 	}
 
-	for(int c = 0; c < n->mNumChildren; ++c)
+	for(unsigned int c = 0; c < n->mNumChildren; ++c)
 	{
 		NodeRecurse(n->mChildren[c], currentTransform);
 	}
@@ -117,7 +117,7 @@ void rt::Scene::ProcessCamera(aiCamera* c)
 void rt::Scene::ProcessLights()
 {
 	std::cout << "   |- Lights: " << assimpScene->mNumLights << std::endl;
-	for(int i = 0; i < assimpScene->mNumLights; ++i)
+	for(unsigned int i = 0; i < assimpScene->mNumLights; ++i)
 	{
 		aiLight* l = assimpScene->mLights[i];
 		std::cout << "      |- '" << l->mName.C_Str() << "'" << std::endl;
@@ -142,6 +142,9 @@ void rt::Scene::ProcessLights()
 			break;
 		case aiLightSource_AREA:
 			lightType = "Area";
+			break;
+		default:
+			std::cerr << "Unknown light type..." << std::endl;
 			break;
 		}
 		std::cout << "         |- Type: " << lightType << std::endl;

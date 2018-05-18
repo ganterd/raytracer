@@ -29,6 +29,7 @@ set(ASSIMP_NO_EXPORT ON CACHE BOOL "")
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "")
 set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "")
 
+add_definitions(-DGLM_FORCE_SSE2 -DGLM_FORCE_AVX)
 add_subdirectory(external/glm)
 add_subdirectory(external/assimp)
 

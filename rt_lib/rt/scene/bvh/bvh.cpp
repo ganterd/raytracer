@@ -15,7 +15,7 @@ rt::BVH::~BVH()
 void rt::BVH::construct(rt::Scene* scene)
 {
     Tri** tris = new Tri*[scene->m_Tris.size()];
-    for(int i = 0; i < scene->m_Tris.size(); ++i)
+    for(unsigned int i = 0; i < scene->m_Tris.size(); ++i)
     {
         tris[i] = &scene->m_Tris[i];
     }
@@ -45,10 +45,17 @@ void rt::BVH::construct(rt::Scene* scene)
 
 void rt::BVH::createBins()
 {
-    mBins = new Bin*[3];
+    mBins = new rt::BVH::Bin*[3];
+    totalAABBRight = new rt::AABB*[3];
+    totalCentroidAABBRight = new rt::AABB*[3];
+    totalPrimitivesRight = new int*[3];
+
     for(int axis = 0; axis < 3; ++axis)
     {
-        mBins[axis] = new Bin[mNumBins];
+        mBins[axis] = new rt::BVH::Bin[mNumBins];
+        totalAABBRight[axis] = new rt::AABB[mNumBins];
+        totalCentroidAABBRight[axis] = new rt::AABB[mNumBins];
+        totalPrimitivesRight[axis] = new int[mNumBins];
     }
 }
 
@@ -57,9 +64,15 @@ void rt::BVH::freeBins()
     for(int axis = 0; axis < 3; ++axis)
     {
         delete[] mBins[axis];
+        delete[] totalAABBRight[axis];
+        delete[] totalCentroidAABBRight[axis];
+        delete[] totalPrimitivesRight[axis];
     }
 
     delete[] mBins;
+    delete[] totalAABBRight;
+    delete[] totalCentroidAABBRight;
+    delete[] totalPrimitivesRight;
 }
 
 rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& centroidAABB, int level)
@@ -72,7 +85,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
         BVHLeafNode* n = new BVHLeafNode();
         for(int i = 0; i < numTris; ++i)
         {
-            n->mTris[n->mNumTris++] = tris[i];
+            n->mTris[(size_t)n->mNumTris++] = tris[i];
             n->mAABB.grow(tris[i]->aabb);
         }
         numLeafNodes++;
@@ -88,6 +101,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
         for(int b = 0; b < mNumBins; ++b)
         {
             mBins[axis][b].mTris.clear();
+            mBins[axis][b].mTris.reserve(numTris / mNumBins);
             mBins[axis][b].mLeft = centroidAABB.mMax[axis] + (float)b * sizePerBin;
             mBins[axis][b].mRight = mBins[axis][b].mLeft + sizePerBin;
             mBins[axis][b].mAABB = rt::AABB::infinity();
@@ -118,7 +132,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     int j = 0;
     for(int i = 0; i <= best.splitIndex; ++i)
     {
-        for(int t = 0; t < mBins[best.axis][i].mTris.size(); ++t)
+        for(unsigned int t = 0; t < mBins[best.axis][i].mTris.size(); ++t)
         {
             trisLeft[j++] = mBins[best.axis][i].mTris[t];
         }
@@ -127,7 +141,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     j = 0;
     for(int i = best.splitIndex + 1; i < mNumBins; ++i)
     {
-        for(int t = 0; t < mBins[best.axis][i].mTris.size(); ++t)
+        for(unsigned int t = 0; t < mBins[best.axis][i].mTris.size(); ++t)
         {
             trisRight[j++] = mBins[best.axis][i].mTris[t];
         }
@@ -152,9 +166,7 @@ rt::BVHBestSplit rt::BVH::findBestSplit()
     BVHBestSplit best;
 
     // Sweep from the right (on all axes) to generate the accumulated AABBs and costs
-    rt::AABB totalAABBRight[3][mNumBins - 1];
-    rt::AABB totalCentroidAABBRight[3][mNumBins - 1];
-    int totalPrimitivesRight[3][mNumBins - 1];
+    
 
     rt::AABB prevAABB[3];
     rt::AABB prevCentroidAABB[3];
@@ -233,4 +245,74 @@ rt::BVHBestSplit rt::BVH::findBestSplit()
     // std::cout << "|- Left/Right Primitives (" << best.numPrimitives_L << "/" << best.numPrimitives_R << ")" << std::endl;
 
     return best;
+}
+
+bool rt::BVH::cast(const rt::Ray& ray, rt::RayHit& hit)
+{
+    return cast(mRoot, ray, hit);
+}
+
+bool rt::BVH::cast(rt::BVHNode* n, const rt::Ray& ray, rt::RayHit& hit)
+{
+	if(n->mAABB.intersect(ray))
+	{
+		if(n->mIsLeaf)
+		{
+			BVHLeafNode* leaf = (BVHLeafNode*)n;
+			bool hasHit = false;
+			for(int t = 0; t < leaf->mNumTris; ++t)
+			{
+				RayHit currentHit;
+				
+				if(leaf->mTris[t]->rayIntersection(ray, currentHit))
+				{
+					hasHit = true;
+					if(currentHit.mDistance < hit.mDistance)
+					{
+						hit = currentHit;
+					}
+				}
+			}
+			return hasHit;
+		}
+		else
+		{
+			return cast(n->mLeft, ray, hit) | cast(n->mRight, ray, hit);
+		}
+	}
+	return false;
+}
+
+bool rt::BVH::occluded(const rt::Ray& ray, const float distance)
+{
+    return occluded(mRoot, ray, distance);
+}
+
+bool rt::BVH::occluded(rt::BVHNode* n, const rt::Ray& ray, const float distance)
+{
+	if(n->mAABB.intersect(ray))
+	{
+		if(n->mIsLeaf)
+		{
+			BVHLeafNode* leaf = (BVHLeafNode*)n;
+			bool hasHit = false;
+			for(int t = 0; t < leaf->mNumTris; ++t)
+			{
+				RayHit currentHit;
+				
+				if(leaf->mTris[t]->rayIntersection(ray, currentHit))
+				{
+                    if(currentHit.mDistance < distance)
+					    return true;
+				}
+			}
+		}
+		else
+		{
+			if(occluded(n->mLeft, ray, distance))
+                return true;
+            return occluded(n->mRight, ray, distance);
+		}
+	}
+	return false;
 }
