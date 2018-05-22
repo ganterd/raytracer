@@ -13,6 +13,8 @@ namespace rt
 		glm::vec3 centroid;
 		glm::vec3 n0, n1, n2;
 		glm::vec3 surfaceNormal;
+		glm::vec3 surfacePerpendicular0;
+		glm::vec3 surfacePerpendicular1;
 		glm::vec3 edge1, edge2;
 		glm::vec2 min;
 		glm::vec2 max;
@@ -35,6 +37,8 @@ namespace rt
 			edge1 = v1 - v0;
 			edge2 = v2 - v0;
 			surfaceNormal = glm::normalize(glm::cross(glm::normalize(edge1), glm::normalize(edge2)));
+			surfacePerpendicular0 = glm::normalize(edge1);
+			surfacePerpendicular1 = glm::normalize(glm::cross(surfaceNormal, surfacePerpendicular0));
 
 			aabb.mMin = glm::min(glm::min(v0, v1), v2);
 			aabb.mMax = glm::max(glm::max(v0, v1), v2);
@@ -94,6 +98,15 @@ namespace rt
 			// float sn2 = 1.0f - sn0 - sn1;
 			
 			// return n0 * sn2 + n1 * sn0 + n2 * sn1;
+		}
+
+		glm::vec3 localToWorldVector(const glm::vec3& v)
+		{
+			return glm::vec3(
+				v.x * surfacePerpendicular1.x + v.y * surfaceNormal.x + v.z * surfacePerpendicular0.x,
+				v.x * surfacePerpendicular1.y + v.y * surfaceNormal.y + v.z * surfacePerpendicular0.y,
+				v.x * surfacePerpendicular1.z + v.y * surfaceNormal.z + v.z * surfacePerpendicular0.z
+			);
 		}
 	};
 }

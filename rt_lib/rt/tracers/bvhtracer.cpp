@@ -75,6 +75,7 @@ bool rt::BVHRayTracer::Occluded(const Ray& ray, float distance)
 
 glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 {
+	glm::vec3 meshDiffuseColour(0.8f, 0.8f, 0.8f);
 	glm::vec3 accumulatedColour = glm::vec3(0.0f);
 	if(depth > mSettings.bounces)
 		return accumulatedColour;
@@ -128,7 +129,7 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 						{
 							float intensity = glm::max(dot * light->intensity(d), 0.0f);
 
-							glm::vec3 meshDiffuseColour(0.8f, 0.8f, 0.8f);
+							
 
 							accumulatedColour += meshDiffuseColour * light->mColourDiffuse * intensity * sampleWeight;
 						}
@@ -140,18 +141,20 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 
 	// Sample hemisphere for bounces
 	glm::vec3 bouncedColour(0.0f);
-	float bounceWeight = 1.0f / (float)mBounceSamples;
+	float bounceWeight = 1.0f / (2.0f * M_PI) / (float)mSettings.bounceSamples;
 	for(int i = 0; i < mSettings.bounceSamples; ++i)
 	{
-		float rX = (((float)std::rand() / (float)RAND_MAX) * 180.0f) - 90.0f;
-		float rY = (((float)std::rand() / (float)RAND_MAX) * 180.0f) - 90.0f;
-		float rZ = (((float)std::rand() / (float)RAND_MAX) * 180.0f) - 90.0f;
-		glm::vec3 sampleDir = p.mInterpolatedNormal;
-		sampleDir = glm::rotateX(sampleDir, glm::radians(rX));
-		sampleDir = glm::rotateY(sampleDir, glm::radians(rY));
-		sampleDir = glm::rotateZ(sampleDir, glm::radians(rZ));
+		float rY = (float)std::rand() * (1.0f / (float)RAND_MAX);
+		float rX = (float)std::rand() * (1.0f / (float)RAND_MAX);
+		float theta = sqrtf(1.0f - rY * rY); 
+		float phi = 2.0f * M_PI * rX; 
+		float x = theta * cosf(phi); 
+		float z = theta * sinf(phi); 
+		glm::vec3 sampleDir(x, rX, z);
+		sampleDir = glm::normalize(sampleDir);
+		sampleDir = p.mTri->localToWorldVector(sampleDir);
 
-		Ray ray(p.mHitPosition + p.mSurfaceNormal * 0.01f, sampleDir);
+		Ray ray(p.mHitPosition + p.mSurfaceNormal * 0.0001f, sampleDir);
 		RayHit hit;
 		
 		if(Shoot(ray, hit))
@@ -160,7 +163,7 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 			bouncedColour += AccumulateLights(hit, depth + 1) * dot / glm::max(hit.mDistance * hit.mDistance, 1.0f);
 		}
 	}
-	accumulatedColour += bouncedColour * bounceWeight;
+	bouncedColour *= bounceWeight;
 
-	return accumulatedColour;
+	return (accumulatedColour + bouncedColour) * meshDiffuseColour;
 }
