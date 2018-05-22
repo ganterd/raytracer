@@ -5,6 +5,9 @@
 #include <rt/scene/bvh/bvhnode.hpp>
 #include <rt/utils/timer.hpp>
 
+#include <xmmintrin.h>
+#include <emmintrin.h>
+
 namespace rt
 {
     class BVHBestSplit
@@ -78,9 +81,12 @@ namespace rt
         rt::AABB** totalCentroidAABBRight;
         int** totalPrimitivesRight;
 
+        BVHNode* mAllocatedNodes;
+        size_t mCurrentlyAllocatedNodes;
+
         rt::BVHNode* recursiveConstruct(Tri** tris, int numTris, const AABB& centroidAABB, int level);
 
-        
+        BVHNode* newNode();
         rt::BVHBestSplit findBestSplit();
     };
 

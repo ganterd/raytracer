@@ -6,6 +6,8 @@
 
 #include <rt/scene/ray.hpp>
 
+#include <xmmintrin.h>
+
 namespace rt
 {
     class AABB
@@ -14,6 +16,8 @@ namespace rt
         glm::vec3 mMin;
         glm::vec3 mMax;
         glm::vec3 mSize;
+        __m128 mSSEMin;
+        __m128 mSSEMax;
 
         AABB()
         {
@@ -28,6 +32,7 @@ namespace rt
             mMin = glm::min(mMin, p);
             mMax = glm::max(mMax, p);
             mSize = mMax - mMin;
+            refreshSSE();
         }
 
         /**
@@ -38,6 +43,22 @@ namespace rt
             mMin = glm::min(mMin, other.mMin);
             mMax = glm::max(mMax, other.mMax);
             mSize = mMax - mMin;
+            refreshSSE();
+        }
+
+        void refreshSSE()
+        {
+            float p[4];
+            p[0] = mMin.x;
+            p[1] = mMin.y;
+            p[2] = mMin.z;
+            p[4] = 0.0f;
+            mSSEMin = _mm_load_ps(p);
+
+            p[0] = mMax.x;
+            p[1] = mMax.y;
+            p[2] = mMax.z;
+            mSSEMax = _mm_load_ps(p);
         }
 
         float surfaceArea()
@@ -57,40 +78,22 @@ namespace rt
 
         bool intersect(const rt::Ray& r)
         {
-            float tmin = (mMin.x - r.mOrigin.x) * r.mInverseDirection.x; 
-            float tmax = (mMax.x - r.mOrigin.x) * r.mInverseDirection.x; 
+            __m128 t1 = _mm_add_ps(mSSEMin, r.mSSEOffset);
+            __m128 t2 = _mm_add_ps(mSSEMax, r.mSSEOffset);
+
+            t1 = _mm_mul_ps(t1, r.mSSEInvDir);
+            t2 = _mm_mul_ps(t2, r.mSSEInvDir);
+
+            float tmin = std::min(t1[0], t2[0]);
+            float tmax = std::max(t1[0], t2[0]);
         
-            if (tmin > tmax) std::swap(tmin, tmax); 
+            tmin = std::max(tmin, std::min(t1[1], t2[1]));
+            tmax = std::min(tmax, std::max(t1[1], t2[1]));
+
+            tmin = std::max(tmin, std::min(t1[2], t2[2]));
+            tmax = std::min(tmax, std::max(t1[2], t2[2]));
         
-            float tymin = (mMin.y - r.mOrigin.y) * r.mInverseDirection.y; 
-            float tymax = (mMax.y - r.mOrigin.y) * r.mInverseDirection.y; 
-        
-            if (tymin > tymax) std::swap(tymin, tymax); 
-        
-            if ((tmin > tymax) || (tymin > tmax)) 
-                return false; 
-        
-            if (tymin > tmin) 
-                tmin = tymin; 
-        
-            if (tymax < tmax) 
-                tmax = tymax; 
-        
-            float tzmin = (mMin.z - r.mOrigin.z) * r.mInverseDirection.z; 
-            float tzmax = (mMax.z - r.mOrigin.z) * r.mInverseDirection.z; 
-        
-            if (tzmin > tzmax) std::swap(tzmin, tzmax); 
-        
-            if ((tmin > tzmax) || (tzmin > tmax)) 
-                return false; 
-        
-            if (tzmin > tmin) 
-                tmin = tzmin; 
-        
-            if (tzmax < tmax) 
-                tmax = tzmax; 
-        
-            return true; 
+            return tmax >= tmin;
         }
 
         friend std::ostream& operator<< (std::ostream& os, const AABB& a)

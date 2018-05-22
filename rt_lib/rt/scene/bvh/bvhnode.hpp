@@ -13,24 +13,14 @@ namespace rt
         BVHNode* mRight;
         rt::AABB mAABB;
 
-        BVHNode()
-        {
-            mIsLeaf = false;
-            mAABB = rt::AABB::infinity();
-        }
-    };
-
-    class BVHLeafNode : public BVHNode
-    {
-    public:
         static const char mMaxTris = 4;
         char mNumTris;
         Tri* mTris[mMaxTris];
 
-        BVHLeafNode()
+        BVHNode()
         {
+            mIsLeaf = false;
             mNumTris = 0;
-            mIsLeaf = true;
             mAABB = rt::AABB::infinity();
         }
     };

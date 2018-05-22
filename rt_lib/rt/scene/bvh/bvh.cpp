@@ -14,11 +14,16 @@ rt::BVH::~BVH()
 
 void rt::BVH::construct(rt::Scene* scene)
 {
+    
+
     Tri** tris = new Tri*[scene->m_Tris.size()];
     for(unsigned int i = 0; i < scene->m_Tris.size(); ++i)
     {
         tris[i] = &scene->m_Tris[i];
     }
+
+    mCurrentlyAllocatedNodes = 0;
+    mAllocatedNodes = new rt::BVHNode[scene->m_Tris.size() * 2 - 1];
 
     deepestLevel = 0;
     numSplitNodes = 0;
@@ -41,6 +46,11 @@ void rt::BVH::construct(rt::Scene* scene)
     std::cout << "|- Top AABB :" << mRoot->mAABB << std::endl;
     
     mTargetScene = scene;
+}
+
+rt::BVHNode* rt::BVH::newNode()
+{
+    return &mAllocatedNodes[mCurrentlyAllocatedNodes++];
 }
 
 void rt::BVH::createBins()
@@ -80,9 +90,10 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     if(level > deepestLevel)
         deepestLevel = level;
 
-    if(numTris <= BVHLeafNode::mMaxTris)
+    if(numTris <= BVHNode::mMaxTris)
     {
-        BVHLeafNode* n = new BVHLeafNode();
+        BVHNode* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
+        n->mIsLeaf = true;
         for(int i = 0; i < numTris; ++i)
         {
             n->mTris[(size_t)n->mNumTris++] = tris[i];
@@ -150,7 +161,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     // Delete the incoming array (save space when recursing)
     delete[] tris;
 
-    BVHNode* n = new BVHNode();
+    BVHNode* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
     n->mLeft = recursiveConstruct(trisLeft, best.numPrimitives_L, best.centroidAABB_L, level + 1);
     n->mRight = recursiveConstruct(trisRight, best.numPrimitives_R, best.centroidAABB_R, level + 1);
 
@@ -258,13 +269,12 @@ bool rt::BVH::cast(rt::BVHNode* n, const rt::Ray& ray, rt::RayHit& hit)
 	{
 		if(n->mIsLeaf)
 		{
-			BVHLeafNode* leaf = (BVHLeafNode*)n;
 			bool hasHit = false;
-			for(int t = 0; t < leaf->mNumTris; ++t)
+			for(int t = 0; t < n->mNumTris; ++t)
 			{
 				RayHit currentHit;
 				
-				if(leaf->mTris[t]->rayIntersection(ray, currentHit))
+				if(n->mTris[t]->rayIntersection(ray, currentHit))
 				{
 					hasHit = true;
 					if(currentHit.mDistance < hit.mDistance)
@@ -294,13 +304,12 @@ bool rt::BVH::occluded(rt::BVHNode* n, const rt::Ray& ray, const float distance)
 	{
 		if(n->mIsLeaf)
 		{
-			BVHLeafNode* leaf = (BVHLeafNode*)n;
 			bool hasHit = false;
-			for(int t = 0; t < leaf->mNumTris; ++t)
+			for(int t = 0; t < n->mNumTris; ++t)
 			{
 				RayHit currentHit;
 				
-				if(leaf->mTris[t]->rayIntersection(ray, currentHit))
+				if(n->mTris[t]->rayIntersection(ray, currentHit))
 				{
                     if(currentHit.mDistance < distance)
 					    return true;
