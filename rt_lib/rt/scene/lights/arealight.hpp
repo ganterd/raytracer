@@ -10,22 +10,15 @@ namespace rt
 		glm::vec3 mPosition;
 		glm::vec3 mDirection;
 		glm::vec3 mUp;
+		glm::vec3 mLeft;
 		glm::vec2 mSize;
+		glm::vec2 mSampleDivision;
+		int mNumSamplePositionsX;
+		int mNumSamplePositionsY;
 		int mNumSamplePositions;
-		glm::vec3* mSamplePositions;
 		glm::vec3 mColourDiffuse;
 		glm::vec3 mColourSpecular;
 		glm::vec3 mColourAmbient;
-
-		AreaLight()
-		{
-			mType = Point;
-		}
-
-		~AreaLight()
-		{
-			delete[] mSamplePositions;
-		}
 
 		AreaLight(
 			const glm::vec3& pos,
@@ -43,32 +36,32 @@ namespace rt
 			mPosition = pos;
 			mDirection = dir;
 			mUp = up;
+			mLeft = glm::normalize(glm::cross(mDirection, mUp));
 			mSize = size;
 			mColourDiffuse = colourDiffuse;
 			mColourAmbient = colourAmbient;
 			mColourSpecular = colourSpecular;
-
-			glm::vec3 left = glm::cross(mDirection, mUp);
+			mNumSamplePositionsX = numSamplePositionsX;
+			mNumSamplePositionsY = numSamplePositionsY;
 			mNumSamplePositions = numSamplePositionsX * numSamplePositionsY;
-			mSamplePositions = new glm::vec3[mNumSamplePositions];
-			std::cout << "[" << numSamplePositionsX << "," << numSamplePositionsY << "]" << std::endl;
-			float dx = mSize.x / (float)numSamplePositionsX;
-			float dy = mSize.y / (float)numSamplePositionsY;
+			mSampleDivision.x = mSize.x / (float)mNumSamplePositionsX;
+			mSampleDivision.y = mSize.y / (float)mNumSamplePositionsY;
+		}
 
-			
-			for(int x = 0; x < numSamplePositionsX; ++x)
-			{
-				float px = mSize.x * -0.5f + (float)x * dx;
-				for(int y = 0; y < numSamplePositionsY; ++y)
-				{
-					float py = mSize.y * -0.5f + (float)y * dy;
+		glm::vec3 sample()
+		{
+			float rx = ((float)std::rand() / (float)RAND_MAX) * mSize.x - mSize.x * 0.5f;
+			float ry = ((float)std::rand() / (float)RAND_MAX) * mSize.y - mSize.y * 0.5f;
+			return mPosition + mLeft * rx + mUp * ry;
+		}
 
-					float rx = ((float)std::rand() / (float)RAND_MAX) * dx;
-					float ry = ((float)std::rand() / (float)RAND_MAX) * dy;
-
-					mSamplePositions[x + y * numSamplePositionsX] = mPosition + left * (px + rx) + mUp * (py + ry);
-				}
-			}
+		glm::vec3 sample(int i)
+		{
+			int x = i % mNumSamplePositionsX;
+			int y = i / mNumSamplePositionsY;
+			float rx = ((float)std::rand() / (float)RAND_MAX) * mSampleDivision.x - mSize.x * 0.5f + mSampleDivision.x * (float)x;
+			float ry = ((float)std::rand() / (float)RAND_MAX) * mSampleDivision.y - mSize.y * 0.5f + mSampleDivision.y * (float)y;
+			return mPosition + mLeft * rx + mUp * ry;
 		}
 	};
 }

@@ -110,14 +110,16 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 		}
 		else if(lights[l]->mType == Light::Area)
 		{
-			AreaLight* light = (AreaLight*)lights[l];
-			float sampleWeight = 1.0f / (float)light->mNumSamplePositions;
-			if(glm::dot(light->mPosition - p.mHitPosition, light->mDirection) < 0.0f)
+			AreaLight light = *(AreaLight*)lights[l];
+			float sampleWeight = 1.0f / (float)light.mNumSamplePositions;
+			if(glm::dot(light.mPosition - p.mHitPosition, light.mDirection) < 0.0f)
 			{
-				for(int i = 0; i < light->mNumSamplePositions; ++i)
+				for(int i = 0; i < light.mNumSamplePositions; ++i)
 				{	
 					// 1: Make sure the surface can see the light (normal check)
-					glm::vec3 toLight = light->mSamplePositions[i] - p.mHitPosition;
+					//glm::vec3 toLight = light->mSamplePositions[i] - p.mHitPosition;
+					glm::vec3 toLight = light.sample(i) - p.mHitPosition;
+
 
 					float d = glm::length(toLight);
 					toLight = glm::normalize(toLight);
@@ -127,11 +129,8 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 						Ray r(p.mHitPosition + p.mSurfaceNormal * 0.01f, toLight);
 						if(!Occluded(r, d))
 						{
-							float intensity = glm::max(dot * light->intensity(d), 0.0f);
-
-							
-
-							accumulatedColour += meshDiffuseColour * light->mColourDiffuse * intensity * sampleWeight;
+							float intensity = dot * light.intensity(d);
+							accumulatedColour += light.mColourDiffuse * intensity * sampleWeight;
 						}
 					}
 				}
