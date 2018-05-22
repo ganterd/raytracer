@@ -295,21 +295,19 @@ bool rt::BVH::cast(rt::BVHNode* n, const rt::Ray& ray, rt::RayHit& hit)
 
 bool rt::BVH::occluded(const rt::Ray& ray, const float distance)
 {
-    return occluded(mRoot, ray, distance);
+    return occluded(*mRoot, ray, distance);
 }
 
-bool rt::BVH::occluded(rt::BVHNode* n, const rt::Ray& ray, const float distance)
+bool rt::BVH::occluded(const rt::BVHNode& n, const rt::Ray& ray, const float distance)
 {
-	if(n->mAABB.intersect(ray))
+	if(n.mAABB.intersect(ray))
 	{
-		if(n->mIsLeaf)
+		if(n.mIsLeaf)
 		{
-			bool hasHit = false;
-			for(int t = 0; t < n->mNumTris; ++t)
+			for(int t = 0; t < n.mNumTris; ++t)
 			{
 				RayHit currentHit;
-				
-				if(n->mTris[t]->rayIntersection(ray, currentHit))
+				if(n.mTris[t]->rayIntersection(ray, currentHit))
 				{
                     if(currentHit.mDistance < distance)
 					    return true;
@@ -318,9 +316,9 @@ bool rt::BVH::occluded(rt::BVHNode* n, const rt::Ray& ray, const float distance)
 		}
 		else
 		{
-			if(occluded(n->mLeft, ray, distance))
+			if(occluded(*n.mLeft, ray, distance))
                 return true;
-            return occluded(n->mRight, ray, distance);
+            return occluded(*n.mRight, ray, distance);
 		}
 	}
 	return false;

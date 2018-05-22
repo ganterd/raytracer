@@ -76,7 +76,7 @@ namespace rt
             return newAABB;
         }
 
-        bool intersect(const rt::Ray& r)
+        bool intersect(const rt::Ray& r) const
         {
             __m128 t1 = _mm_add_ps(mSSEMin, r.mSSEOffset);
             __m128 t2 = _mm_add_ps(mSSEMax, r.mSSEOffset);
@@ -84,14 +84,16 @@ namespace rt
             t1 = _mm_mul_ps(t1, r.mSSEInvDir);
             t2 = _mm_mul_ps(t2, r.mSSEInvDir);
 
-            float tmin = std::min(t1[0], t2[0]);
-            float tmax = std::max(t1[0], t2[0]);
-        
-            tmin = std::max(tmin, std::min(t1[1], t2[1]));
-            tmax = std::min(tmax, std::max(t1[1], t2[1]));
+            __m128 _min = _mm_min_ps(t1, t2);
+            __m128 _max = _mm_max_ps(t1, t2);
 
-            tmin = std::max(tmin, std::min(t1[2], t2[2]));
-            tmax = std::min(tmax, std::max(t1[2], t2[2]));
+            float tmin = _min[0];
+            tmin = std::max(tmin, _min[1]);
+            tmin = std::max(tmin, _min[2]);
+
+            float tmax = _max[0];
+            tmax = std::min(tmax, _max[1]);
+            tmax = std::min(tmax, _max[2]);
         
             return tmax >= tmin;
         }
