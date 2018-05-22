@@ -16,8 +16,7 @@ namespace rt
         glm::vec3 mMin;
         glm::vec3 mMax;
         glm::vec3 mSize;
-        __m128 mSSEMin;
-        __m128 mSSEMax;
+        __m256 mSSEBounds;
 
         AABB()
         {
@@ -48,17 +47,15 @@ namespace rt
 
         void refreshSSE()
         {
-            float p[4];
-            p[0] = mMin.x;
-            p[1] = mMin.y;
-            p[2] = mMin.z;
-            p[4] = 0.0f;
-            mSSEMin = _mm_load_ps(p);
+            mSSEBounds[0] = mMin.x;
+            mSSEBounds[1] = mMin.y;
+            mSSEBounds[2] = mMin.z;
+            mSSEBounds[3] = 0.0f;
 
-            p[0] = mMax.x;
-            p[1] = mMax.y;
-            p[2] = mMax.z;
-            mSSEMax = _mm_load_ps(p);
+            mSSEBounds[4] = mMax.x;
+            mSSEBounds[5] = mMax.y;
+            mSSEBounds[6] = mMax.z;
+            mSSEBounds[7] = 0.0f;
         }
 
         float surfaceArea()
@@ -78,14 +75,9 @@ namespace rt
 
         bool intersect(const rt::Ray& r) const
         {
-            __m128 t1 = _mm_add_ps(mSSEMin, r.mSSEOffset);
-            __m128 t2 = _mm_add_ps(mSSEMax, r.mSSEOffset);
-
-            t1 = _mm_mul_ps(t1, r.mSSEInvDir);
-            t2 = _mm_mul_ps(t2, r.mSSEInvDir);
-
-            __m128 _min = _mm_min_ps(t1, t2);
-            __m128 _max = _mm_max_ps(t1, t2);
+            __m256 t1 = _mm256_mul_ps(_mm256_add_ps(mSSEBounds, r.mSSEOffset), r.mSSEInvDir);
+            __m128 _min = _mm_min_ps(_mm_load_ps(&t1[0]), _mm_load_ps(&t1[4]));
+            __m128 _max = _mm_max_ps(_mm_load_ps(&t1[0]), _mm_load_ps(&t1[4]));
 
             float tmin = _min[0];
             tmin = std::max(tmin, _min[1]);

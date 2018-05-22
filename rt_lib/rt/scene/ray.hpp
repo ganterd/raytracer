@@ -15,8 +15,8 @@ namespace rt
         glm::vec3 mDirection;
         glm::vec3 mInverseDirection;
 
-        __m128 mSSEOffset;
-        __m128 mSSEInvDir;
+        __m256 mSSEOffset;
+        __m256 mSSEInvDir;
 
         Ray(const glm::vec3& o, const glm::vec3& d)
         {
@@ -24,18 +24,16 @@ namespace rt
             mDirection = d;
             mInverseDirection = 1.0f / d;
 
-            float p[4];
-            p[3] = 0.0f;
+            
+            mSSEOffset[0] = mSSEOffset[4] = -o.x;
+            mSSEOffset[1] = mSSEOffset[5] = -o.y;
+            mSSEOffset[2] = mSSEOffset[6] = -o.z;
+            mSSEOffset[3] = mSSEOffset[7] = 0.0f;
 
-            p[0] = -o.x;
-            p[1] = -o.y;
-            p[2] = -o.z;
-            mSSEOffset = _mm_load_ps(p);
-
-            p[0] = mInverseDirection.x;
-            p[1] = mInverseDirection.y;
-            p[2] = mInverseDirection.z;
-            mSSEInvDir = _mm_load_ps(p);
+            mSSEInvDir[0] = mSSEInvDir[4] = mInverseDirection.x;
+            mSSEInvDir[1] = mSSEInvDir[5] = mInverseDirection.y;
+            mSSEInvDir[2] = mSSEInvDir[6] = mInverseDirection.z;
+            mSSEInvDir[3] = mSSEInvDir[7] = 0.0f;
         }
     };
 
