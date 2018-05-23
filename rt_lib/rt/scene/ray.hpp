@@ -8,17 +8,17 @@
 
 namespace rt
 {
-    class alignas(alignof(__m256)) Ray
+    class alignas(32) Ray
     {
     public:
-        alignas(alignof(__m256)) __m256 mSSEOffset;
-        alignas(alignof(__m256)) __m256 mSSEInvDir;
+        alignas(4) glm::vec3 mOrigin;
+        alignas(4) glm::vec3 mDirection;
+        alignas(4) glm::vec3 mInverseDirection;
 
-        glm::vec3 mOrigin;
-        glm::vec3 mDirection;
-        glm::vec3 mInverseDirection;
-
-        
+        alignas(16) __m128 mSSEDirection;
+        alignas(16) __m128 mSSEOrigin;
+        alignas(32) __m256 mSSEOffset;
+        alignas(32) __m256 mSSEInvDir;
 
         Ray(const glm::vec3& o, const glm::vec3& d)
         {
@@ -26,6 +26,15 @@ namespace rt
             mDirection = d;
             mInverseDirection = 1.0f / d;
 
+            mSSEOrigin[0] = o[0];
+            mSSEOrigin[1] = o[1];
+            mSSEOrigin[2] = o[2];
+            mSSEOrigin[3] = 0;
+
+            mSSEDirection[0] = d[0];
+            mSSEDirection[1] = d[1];
+            mSSEDirection[2] = d[2];
+            mSSEDirection[3] = 0;
             
             mSSEOffset[0] = mSSEOffset[4] = -o.x;
             mSSEOffset[1] = mSSEOffset[5] = -o.y;

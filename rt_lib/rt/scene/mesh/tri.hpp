@@ -19,6 +19,8 @@ namespace rt
 		glm::vec2 min;
 		glm::vec2 max;
 		AABB aabb;
+		__m128 mSSEOffset;
+		__m128 mSSEEdge1, mSSEEdge2;
 
 		Tri(
 			const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2,
@@ -44,32 +46,63 @@ namespace rt
 			aabb.mMax = glm::max(glm::max(v0, v1), v2);
 
 			centroid = (v0 + v1 + v2) / 3.0f;
+
+			mSSEOffset[0] = -v0.x;
+			mSSEOffset[1] = -v0.y;
+			mSSEOffset[2] = -v0.z;
+			mSSEOffset[3] = 0.0f;
+
+			mSSEEdge1[0] = edge1.x;
+			mSSEEdge1[1] = edge1.y;
+			mSSEEdge1[2] = edge1.z;
+			mSSEEdge1[3] = 0.0f;
+
+			mSSEEdge2[0] = edge2.x;
+			mSSEEdge2[1] = edge2.y;
+			mSSEEdge2[2] = edge2.z;
+			mSSEEdge2[3] = 0.0f;
+		}
+
+		inline float DotProduct(__m128 a, __m128 b)
+		{
+			__m128 r1 = _mm_mul_ps(a, b);
+			r1 = _mm_hadd_ps(r1, r1);
+			r1 = _mm_hadd_ps(r1, r1);
+			return r1[0];
+		}
+
+		inline __m128 CrossProduct(__m128 a, __m128 b)
+		{
+			return _mm_sub_ps(
+				_mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1)), _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 1, 0, 2))), 
+				_mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 1, 0, 2)), _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 0, 2, 1)))
+			);
 		}
 
 		bool rayIntersection(const Ray& r, RayHit& out)
 		{
 			const float e = 0.000001f;
-			glm::vec3 tvec, pvec, qvec;
+			__m128 tvec, pvec, qvec;
 			float det, inv_det;
 
-			pvec = glm::cross(r.mDirection, edge2);
-			det = glm::dot(edge1, pvec);
+			pvec = CrossProduct(r.mSSEDirection, mSSEEdge2);
+			det = DotProduct(mSSEEdge1, pvec);
 
 			if(det > -e && det < e)
 				return false;
 			inv_det = 1.0f / det;
 			
-			tvec = r.mOrigin - v0;
-			float u = glm::dot(tvec, pvec) * inv_det;
+			tvec = _mm_add_ps(r.mSSEOrigin, mSSEOffset);//v0;
+			float u = DotProduct(tvec, pvec) * inv_det;
 			if(u < 0.0f || u > 1.0f)
 				return false;
 
-			qvec = glm::cross(tvec, edge1);
-			float v = glm::dot(r.mDirection, qvec) * inv_det;
+			qvec = CrossProduct(tvec, mSSEEdge1);
+			float v = DotProduct(r.mSSEDirection, qvec) * inv_det;
 			if(v < 0.0f || (u + v > 1.0f))
 				return false;
 
-			float d = glm::dot(edge2, qvec) * inv_det;
+			float d = DotProduct(mSSEEdge2, qvec) * inv_det;
 			if(d < e)
 				return false;
 
@@ -78,6 +111,35 @@ namespace rt
 			out.mSurfaceNormal = surfaceNormal;
 			out.mTri = this;
 			return true;
+			// glm::vec3 tvec, pvec, qvec;
+			// float det, inv_det;
+
+			// pvec = glm::cross(r.mDirection, edge2);
+			// det = glm::dot(edge1, pvec);
+
+			// if(det > -e && det < e)
+			// 	return false;
+			// inv_det = 1.0f / det;
+			
+			// tvec = r.mOrigin - v0;
+			// float u = glm::dot(tvec, pvec) * inv_det;
+			// if(u < 0.0f || u > 1.0f)
+			// 	return false;
+
+			// qvec = glm::cross(tvec, edge1);
+			// float v = glm::dot(r.mDirection, qvec) * inv_det;
+			// if(v < 0.0f || (u + v > 1.0f))
+			// 	return false;
+
+			// float d = glm::dot(edge2, qvec) * inv_det;
+			// if(d < e)
+			// 	return false;
+
+			// out.mDistance = d;
+			// out.mHitPosition = r.mOrigin + r.mDirection * d;
+			// out.mSurfaceNormal = surfaceNormal;
+			// out.mTri = this;
+			// return true;
 		}
 
 		glm::vec3 interpolatedNormal(const glm::vec3& p)

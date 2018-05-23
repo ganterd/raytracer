@@ -13,10 +13,10 @@ namespace rt
     class AABB
     {
     public:
-        glm::vec3 mMin;
-        glm::vec3 mMax;
-        glm::vec3 mSize;
-        __m256 mSSEBounds;
+        alignas(4)glm::vec3 mMin;
+        alignas(4)glm::vec3 mMax;
+        alignas(4)glm::vec3 mSize;
+        alignas(32)__m256 mSSEBounds;
 
         AABB()
         {

@@ -5,9 +5,9 @@
 
 namespace rt
 {
-    typedef struct alignas(alignof(__m256)) _BVHNode
+    typedef struct _BVHNode
     {
-        alignas(alignof(__m256)) rt::AABB mAABB = rt::AABB::infinity();
+        rt::AABB mAABB = rt::AABB::infinity();
         bool mIsLeaf = false;
         struct _BVHNode* mLeft;
         struct _BVHNode* mRight;
