@@ -23,7 +23,8 @@ void rt::BVH::construct(rt::Scene* scene)
     }
 
     mCurrentlyAllocatedNodes = 0;
-    mAllocatedNodes = new rt::BVHNode[scene->m_Tris.size() * 2 - 1];
+    //mAllocatedNodes = new rt::BVHNode[scene->m_Tris.size() * 2 - 1];
+    mAllocatedNodes = (BVHNode*)aligned_alloc(32, sizeof(BVHNode) * (scene->m_Tris.size() * 2 - 1));
 
     deepestLevel = 0;
     numSplitNodes = 0;
