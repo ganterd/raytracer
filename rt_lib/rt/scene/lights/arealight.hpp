@@ -87,11 +87,23 @@ namespace rt
 			int y = i / mNumSamplePositionsY;
 			float rx = (float)std::rand() * mSampleScaler.x - mHalfSize.x + mSampleDivision.x * (float)x;
 			float ry = (float)std::rand() * mSampleScaler.y - mHalfSize.y + mSampleDivision.y * (float)y;
-			__m128 SSErx = _mm_load1_ps(&rx);
-			__m128 SSEry = _mm_load1_ps(&ry);
+			__m128 SSErx = _mm_set1_ps(rx);
+			__m128 SSEry = _mm_set1_ps(ry);
 			__m128 r = _mm_fmadd_ps(mSSELeft, SSErx, mSSEPosition);
 			r = _mm_fmadd_ps(mSSEUp, SSEry, r);
 			return glm::vec3(r[0], r[1], r[2]);
+		}
+
+		__m128 sampleSSE(int i)
+		{
+			int x = i % mNumSamplePositionsX;
+			int y = i / mNumSamplePositionsY;
+			float rx = (float)std::rand() * mSampleScaler.x - mHalfSize.x + mSampleDivision.x * (float)x;
+			float ry = (float)std::rand() * mSampleScaler.y - mHalfSize.y + mSampleDivision.y * (float)y;
+			__m128 SSErx = _mm_set1_ps(rx);
+			__m128 SSEry = _mm_set1_ps(ry);
+			__m128 r = _mm_fmadd_ps(mSSELeft, SSErx, mSSEPosition);
+			return _mm_fmadd_ps(mSSEUp, SSEry, r);
 		}
 	};
 }

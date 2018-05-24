@@ -1,5 +1,6 @@
 #include <iostream>
 #include <thread>
+#include <mutex>
 
 #include <SFML/Graphics.hpp>
 
@@ -10,14 +11,47 @@
 
 #include "sfmlbuffer.hpp"
 
+int threadCount;
+glm::ivec2 renderRegions;
+int totalRenderRegions;
+glm::ivec2 renderRegionSize;
+
+
+glm::ivec4* currentThreadRenderRegions;
+
+std::mutex remainingRenderRegionsMutex;
+int totalRemainingRenderRegions;
+
 void RenderRegionThread(
 	rt::RayTracer* tracer,
 	rt::Scene* scene,
 	rt::Buffer* buffer,
-	glm::ivec2 renderRegionMin,
-	glm::ivec2 renderRegionMax
+	int threadId
 ){
-	tracer->Trace(scene, buffer, renderRegionMin, renderRegionMax);
+	int currentRenderRegionIndex = threadId;
+	while(currentRenderRegionIndex < totalRenderRegions)
+	{
+		glm::ivec2 renderRegion;
+		renderRegion.x = currentRenderRegionIndex % renderRegions.x;
+		renderRegion.y = currentRenderRegionIndex / renderRegions.x;
+
+		glm::ivec2 renderRegionMin = renderRegion * renderRegionSize;
+		glm::ivec2 renderRegionMax = renderRegionMin + renderRegionSize; 
+
+		remainingRenderRegionsMutex.lock();
+		currentThreadRenderRegions[threadId].x = renderRegionMin.x;
+		currentThreadRenderRegions[threadId].y = renderRegionMin.y;
+		currentThreadRenderRegions[threadId].z = renderRegionMax.x;
+		currentThreadRenderRegions[threadId].w = renderRegionMax.y;
+		remainingRenderRegionsMutex.unlock();
+		
+		tracer->Trace(scene, buffer, renderRegionMin, renderRegionMax);
+
+		remainingRenderRegionsMutex.lock();
+		currentRenderRegionIndex++;
+		totalRemainingRenderRegions;
+		remainingRenderRegionsMutex.unlock();
+	}
 }
 
 int main (int argc, char* argv[])
@@ -29,7 +63,7 @@ int main (int argc, char* argv[])
 
 	int threadCount = 8;
 	glm::ivec2 bufferSize(960, 540);
-	glm::ivec2 renderRegionSize(16, 16);
+	renderRegionSize = glm::vec2(16, 16);
 
 	for(int i = 2; i < argc; ++i)
 	{
@@ -53,10 +87,11 @@ int main (int argc, char* argv[])
 
 	//const glm::ivec2 bufferSize(640, 360);
 	
-	glm::ivec2 renderRegions(bufferSize / renderRegionSize);
+	renderRegions = glm::ivec2(bufferSize / renderRegionSize);
 	renderRegions.x += (bufferSize.x % renderRegionSize.x != 0 ? 1 : 0);
 	renderRegions.y += (bufferSize.y % renderRegionSize.y != 0 ? 1 : 0);
-	glm::ivec2 currentRenderRegion(0);
+	totalRenderRegions = renderRegions.x * renderRegions.y;
+	totalRemainingRenderRegions = totalRenderRegions;
 	
 	sf::RenderWindow window(sf::VideoMode(bufferSize.x, bufferSize.y), "Raytracer");
 	rt::SFMLBuffer buffer(bufferSize.x, bufferSize.y);
@@ -74,33 +109,39 @@ int main (int argc, char* argv[])
 	
 	rt::Timer actualRenderTimer, renderAndCopyTimer;
 	renderAndCopyTimer.start();
-	while(window.isOpen() && currentRenderRegion.y <= renderRegions.y)
+	
+	currentThreadRenderRegions = new glm::ivec4[threadCount];
+	actualRenderTimer.start();
+	for(int t = 0; t < threadCount; ++t)
 	{
-		actualRenderTimer.start();
-		for(int t = 0; t < threadCount; ++t)
-		{
-			threads[t] = std::thread(RenderRegionThread, 
-				&tracer, &scene, &buffer, 
-				renderRegionSize * currentRenderRegion,
-				renderRegionSize * (currentRenderRegion + glm::ivec2(1))
-			);
-
-			currentRenderRegion.x++;
-			if(currentRenderRegion.x == renderRegions.x)
-			{
-				currentRenderRegion.x = 0;
-				currentRenderRegion.y++;
-			}
-		}
-		for(int t = 0; t < threadCount; ++t)
-		{
-			threads[t].join();
-		}
-		actualRenderTime += actualRenderTimer.stop();
+		threads[t] = std::thread(RenderRegionThread, &tracer, &scene, &buffer, t);
+	}
+	
+	while(true)
+	{
+		window.clear();
 
 		buffer.Copy();
 		window.draw(buffer.m_SFMLSprite);
+		
+
+		remainingRenderRegionsMutex.lock();
+		int remaining = totalRemainingRenderRegions;
+		for(int i = 0; i < threadCount; ++i)
+		{
+			sf::RectangleShape renderRegion(sf::Vector2<float>(renderRegionSize.x, renderRegionSize.y));
+			renderRegion.setPosition(currentThreadRenderRegions[i].x, bufferSize.y - currentThreadRenderRegions[i].y - renderRegionSize.y);
+			renderRegion.setFillColor(sf::Color(0.0f, 0.0f, 0.0f, 0.0f));
+			renderRegion.setOutlineColor(sf::Color(255.0f, 0.0, 0.0f, 255.0f));
+			renderRegion.setOutlineThickness(1.0f);
+			window.draw(renderRegion);
+		}
+		remainingRenderRegionsMutex.unlock();
+
 		window.display();
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+		
 
 		sf::Event evt;
 		if(window.pollEvent(evt))
@@ -109,6 +150,14 @@ int main (int argc, char* argv[])
 				window.close();
 		}
 	}
+
+	for(int t = 0; t < threadCount; ++t)
+	{
+		threads[t].join();
+	}
+
+	
+
 	renderAndCopyTimer.stop();
 	delete[] threads;
 	delete[] threadRenderIndex;

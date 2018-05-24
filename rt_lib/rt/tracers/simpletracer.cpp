@@ -64,7 +64,7 @@ bool rt::SimpleRayTracer::Shoot(Scene* s, const Ray& ray, RayHit& hit)
 	if(hit.mTri)
 	{
 		hit.mInterpolatedNormal = hit.mTri->interpolatedNormal(hit.mHitPosition);
-		if(glm::dot(hit.mSurfaceNormal, ray.mDirection) > 0.0f)
+		if(glm::dot(hit.mSurfaceNormal, ray.direction()) > 0.0f)
 		{
 			hit.mSurfaceNormal *= -1.0f;
 			hit.mInterpolatedNormal *= -1.0f;

@@ -58,7 +58,7 @@ bool rt::BVHRayTracer::Shoot(const Ray& ray, RayHit& hit)
 	if(bvh.cast(ray, hit))
 	{
 		hit.mInterpolatedNormal = hit.mTri->interpolatedNormal(hit.mHitPosition);
-		if(glm::dot(hit.mSurfaceNormal, ray.mDirection) > 0.0f)
+		if(glm::dot(hit.mSurfaceNormal, ray.direction()) > 0.0f)
 		{
 			hit.mSurfaceNormal *= -1.0f;
 			hit.mInterpolatedNormal *= -1.0f;
@@ -79,6 +79,24 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 	glm::vec3 accumulatedColour = glm::vec3(0.0f);
 	if(depth > mSettings.bounces)
 		return accumulatedColour;
+
+	__m128 hitPosition = _mm_set_ps(
+		0.0f, 
+		p.mHitPosition.z, 
+		p.mHitPosition.y, 
+		p.mHitPosition.x
+	);
+
+	__m128 hitNormal = _mm_set_ps(
+		0.0f, 
+		p.mInterpolatedNormal.z,
+		p.mInterpolatedNormal.y,
+		p.mInterpolatedNormal.x
+	);
+
+	__m128 hitBias = _mm_set1_ps(0.01f);
+
+	__m128 biasPosition = _mm_fmadd_ps(hitNormal, hitBias, hitPosition);
 	
 	// Check all lights as if they were a point light for now
 	int numLights = mTargetScene->mLights.size();
@@ -117,16 +135,24 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 				for(int i = 0; i < light.mNumSamplePositions; ++i)
 				{	
 					// 1: Make sure the surface can see the light (normal check)
-					//glm::vec3 toLight = light->mSamplePositions[i] - p.mHitPosition;
-					glm::vec3 toLight = light.sample(i) - p.mHitPosition;
+					__m128 lightSample = light.sampleSSE(i);
+					__m128 toLight = _mm_sub_ps(lightSample, hitPosition);
 
+					// Get vector magnitude
+					float d =_mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(toLight, toLight, 0x71)));
 
-					float d = glm::length(toLight);
-					toLight = glm::normalize(toLight);
-					float dot = glm::dot(p.mInterpolatedNormal, toLight);
+					// Normalize vector (v / |v|)
+					toLight = _mm_div_ps(toLight, _mm_set1_ps(d));
+
+					// Dot product of surface normal and light dir
+					__m128 dp = _mm_mul_ps(hitNormal, toLight);
+					dp = _mm_hadd_ps(dp, dp);
+					dp = _mm_hadd_ps(dp, dp);
+					float dot = dp[0];
+					
 					if(dot > 0.0f)
 					{
-						Ray r(p.mHitPosition + p.mSurfaceNormal * 0.01f, toLight);
+						Ray r(biasPosition, toLight);
 						if(!Occluded(r, d))
 						{
 							float intensity = dot * light.intensity(d);

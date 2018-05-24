@@ -128,7 +128,9 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
         Tri* tri = tris[t];
         for(int axis = 0; axis < 3; ++axis)
         {
-            int axisBin = (float)mNumBins * (( 0.9999f * (tri->centroid[axis] - centroidAABB.mMin[axis])) / aabbSize[axis]);
+            int axisBin = 0;
+            if(aabbSize[axis] > 0.0f)
+                axisBin = (float)mNumBins * (( 0.9999f * (tri->centroid[axis] - centroidAABB.mMin[axis])) / aabbSize[axis]);
             mBins[axis][axisBin].mTris.push_back(tri);
             mBins[axis][axisBin].mAABB.grow(tri->aabb);
             mBins[axis][axisBin].mCentroidsAABB.grow(tri->centroid);
