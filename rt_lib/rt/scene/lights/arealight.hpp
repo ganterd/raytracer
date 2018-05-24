@@ -1,6 +1,8 @@
 #pragma once
 
 #include <rt/scene/lights/light.hpp>
+#include <xmmintrin.h>
+#include <immintrin.h>
 
 namespace rt
 {
@@ -19,6 +21,12 @@ namespace rt
 		glm::vec3 mColourDiffuse;
 		glm::vec3 mColourSpecular;
 		glm::vec3 mColourAmbient;
+
+		__m128 mSSEPosition;
+		__m128 mSSEUp;
+		__m128 mSSELeft;
+		glm::vec2 mHalfSize;
+		glm::vec2 mSampleScaler;
 
 		AreaLight(
 			const glm::vec3& pos,
@@ -46,6 +54,24 @@ namespace rt
 			mNumSamplePositions = numSamplePositionsX * numSamplePositionsY;
 			mSampleDivision.x = mSize.x / (float)mNumSamplePositionsX;
 			mSampleDivision.y = mSize.y / (float)mNumSamplePositionsY;
+
+			mSSEPosition[0] = pos.x;
+			mSSEPosition[1] = pos.y;
+			mSSEPosition[2] = pos.z;
+			mSSEPosition[3] = 0.0f;
+
+			mSSEUp[0] = up.x;
+			mSSEUp[1] = up.y;
+			mSSEUp[2] = up.z;
+			mSSEUp[3] = 0.0f;
+
+			mSSELeft[0] = mLeft.x;
+			mSSELeft[1] = mLeft.y;
+			mSSELeft[2] = mLeft.z;
+			mSSELeft[3] = 0.0f;
+
+			mHalfSize = mSize * 0.5f;
+			mSampleScaler = mSampleDivision * (1.0f / (float)RAND_MAX);
 		}
 
 		glm::vec3 sample()
@@ -59,9 +85,13 @@ namespace rt
 		{
 			int x = i % mNumSamplePositionsX;
 			int y = i / mNumSamplePositionsY;
-			float rx = ((float)std::rand() / (float)RAND_MAX) * mSampleDivision.x - mSize.x * 0.5f + mSampleDivision.x * (float)x;
-			float ry = ((float)std::rand() / (float)RAND_MAX) * mSampleDivision.y - mSize.y * 0.5f + mSampleDivision.y * (float)y;
-			return mPosition + mLeft * rx + mUp * ry;
+			float rx = (float)std::rand() * mSampleScaler.x - mHalfSize.x + mSampleDivision.x * (float)x;
+			float ry = (float)std::rand() * mSampleScaler.y - mHalfSize.y + mSampleDivision.y * (float)y;
+			__m128 SSErx = _mm_load1_ps(&rx);
+			__m128 SSEry = _mm_load1_ps(&ry);
+			__m128 r = _mm_fmadd_ps(mSSELeft, SSErx, mSSEPosition);
+			r = _mm_fmadd_ps(mSSEUp, SSEry, r);
+			return glm::vec3(r[0], r[1], r[2]);
 		}
 	};
 }

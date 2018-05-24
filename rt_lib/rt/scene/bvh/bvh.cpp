@@ -301,6 +301,7 @@ bool rt::BVH::occluded(const rt::Ray& ray, const float distance)
 
 bool rt::BVH::occluded(const rt::BVHNode& n, const rt::Ray& ray, const float distance)
 {
+    
 	if(n.mAABB.intersect(ray))
 	{
 		if(n.mIsLeaf)

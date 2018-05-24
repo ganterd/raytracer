@@ -63,7 +63,7 @@ namespace rt
 			mSSEEdge2[3] = 0.0f;
 		}
 
-		inline float DotProduct(__m128 a, __m128 b)
+		inline float DotProduct(const __m128& a, const __m128& b)
 		{
 			__m128 r1 = _mm_mul_ps(a, b);
 			r1 = _mm_hadd_ps(r1, r1);
@@ -71,7 +71,7 @@ namespace rt
 			return r1[0];
 		}
 
-		inline __m128 CrossProduct(__m128 a, __m128 b)
+		inline __m128 CrossProduct(const __m128& a, const __m128& b)
 		{
 			return _mm_sub_ps(
 				_mm_mul_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 0, 2, 1)), _mm_shuffle_ps(b, b, _MM_SHUFFLE(3, 1, 0, 2))), 
