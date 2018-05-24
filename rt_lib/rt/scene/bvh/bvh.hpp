@@ -67,7 +67,7 @@ namespace rt
         bool cast(BVHNode* n, const rt::Ray& r, rt::RayHit& hit);
 
         bool occluded(const rt::Ray& ray, const float distance);
-        bool occluded(const BVHNode& n, const rt::Ray& ray, const float distance);
+        bool occluded(BVHNode* n, const rt::Ray& ray, const float distance);
 
     private:
         rt::BVH::Bin** mBins;

@@ -19,8 +19,13 @@ namespace rt
 		glm::vec2 min;
 		glm::vec2 max;
 		AABB aabb;
-		__m128 mSSEOffset;
+		__m128 mSSEOrigin;
 		__m128 mSSEEdge1, mSSEEdge2;
+
+		Tri()
+		{
+
+		}
 
 		Tri(
 			const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2,
@@ -42,25 +47,16 @@ namespace rt
 			surfacePerpendicular0 = glm::normalize(edge1);
 			surfacePerpendicular1 = glm::normalize(glm::cross(surfaceNormal, surfacePerpendicular0));
 
-			aabb.mMin = glm::min(glm::min(v0, v1), v2);
-			aabb.mMax = glm::max(glm::max(v0, v1), v2);
+			aabb = rt::AABB::infinity();
+			aabb.grow(v0);
+			aabb.grow(v1);
+			aabb.grow(v2);
 
 			centroid = (v0 + v1 + v2) / 3.0f;
 
-			mSSEOffset[0] = -v0.x;
-			mSSEOffset[1] = -v0.y;
-			mSSEOffset[2] = -v0.z;
-			mSSEOffset[3] = 0.0f;
-
-			mSSEEdge1[0] = edge1.x;
-			mSSEEdge1[1] = edge1.y;
-			mSSEEdge1[2] = edge1.z;
-			mSSEEdge1[3] = 0.0f;
-
-			mSSEEdge2[0] = edge2.x;
-			mSSEEdge2[1] = edge2.y;
-			mSSEEdge2[2] = edge2.z;
-			mSSEEdge2[3] = 0.0f;
+			mSSEOrigin = _mm_set_ps(0.0f, v0.z, v0.y, v0.x);
+			mSSEEdge1 = _mm_set_ps(0.0f, edge1.z, edge1.y, edge1.x);
+			mSSEEdge2 = _mm_set_ps(0.0f, edge2.z, edge2.y, edge2.x);
 		}
 
 		inline float DotProduct(const __m128& a, const __m128& b)
@@ -92,7 +88,7 @@ namespace rt
 				return false;
 			inv_det = 1.0f / det;
 			
-			tvec = _mm_add_ps(r.mSSEOrigin, mSSEOffset);//v0;
+			tvec = _mm_sub_ps(r.mSSEOrigin, mSSEOrigin);//v0;
 			float u = DotProduct(tvec, pvec) * inv_det;
 			if(u < 0.0f || u > 1.0f)
 				return false;
@@ -107,7 +103,10 @@ namespace rt
 				return false;
 
 			out.mDistance = d;
-			out.mHitPosition = r.mOrigin + r.mDirection * d;
+
+			__m128 SSEd = _mm_set1_ps(d);
+			__m128 hit = _mm_fmadd_ps(r.mSSEDirection, SSEd, r.mSSEOrigin);
+			out.mHitPosition = glm::vec3(hit[0], hit[1], hit[2]);
 			out.mSurfaceNormal = surfaceNormal;
 			out.mTri = this;
 			return true;

@@ -104,7 +104,8 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
         return n;
     }
 
-    glm::vec3 aabbSize = centroidAABB.mMax - centroidAABB.mMin;
+
+    glm::vec3 aabbSize = centroidAABB.mSize;
 
     // Initialise the bins
     for(int axis = 0; axis < 3; ++axis)
@@ -296,32 +297,32 @@ bool rt::BVH::cast(rt::BVHNode* n, const rt::Ray& ray, rt::RayHit& hit)
 
 bool rt::BVH::occluded(const rt::Ray& ray, const float distance)
 {
-    return occluded(*mRoot, ray, distance);
+    return occluded(mRoot, ray, distance);
 }
 
-bool rt::BVH::occluded(const rt::BVHNode& n, const rt::Ray& ray, const float distance)
+bool rt::BVH::occluded(rt::BVHNode* n, const rt::Ray& ray, const float distance)
 {
-    
-	if(n.mAABB.intersect(ray))
-	{
-		if(n.mIsLeaf)
-		{
-			for(int t = 0; t < n.mNumTris; ++t)
-			{
-				RayHit currentHit;
-				if(n.mTris[t]->rayIntersection(ray, currentHit))
-				{
+    if(n->mAABB.intersect(ray))
+    {
+        if(n->mIsLeaf)
+        {
+            for(int t = 0; t < n->mNumTris; ++t)
+            {
+                RayHit currentHit;
+                if(n->mTris[t]->rayIntersection(ray, currentHit))
+                {
                     if(currentHit.mDistance < distance)
-					    return true;
-				}
-			}
-		}
-		else
-		{
-			if(occluded(*n.mLeft, ray, distance))
+                        return true;
+                }
+            }
+        }
+        else
+        {
+            if(occluded(n->mLeft, ray, distance))
                 return true;
-            return occluded(*n.mRight, ray, distance);
-		}
-	}
+            else
+                return occluded(n->mRight, ray, distance);
+        }
+    }
 	return false;
 }

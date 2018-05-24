@@ -17,8 +17,7 @@ namespace rt
 
         alignas(16) __m128 mSSEDirection;
         alignas(16) __m128 mSSEOrigin;
-        alignas(32) __m256 mSSEOffset;
-        alignas(32) __m256 mSSEInvDir;
+        alignas(16) __m128 mSSEInvDir;
 
         Ray(const glm::vec3& o, const glm::vec3& d)
         {
@@ -26,25 +25,20 @@ namespace rt
             mDirection = d;
             mInverseDirection = 1.0f / d;
 
-            mSSEOrigin[0] = o[0];
-            mSSEOrigin[1] = o[1];
-            mSSEOrigin[2] = o[2];
-            mSSEOrigin[3] = 0;
+            mSSEOrigin = _mm_set_ps(0.0f, o.z, o.y, o.x);
+            mSSEDirection = _mm_set_ps(1.0f, d.z, d.y, d.x);
+            mSSEInvDir = _mm_div_ps(_mm_set1_ps(1.0f), mSSEDirection);
+        }
 
-            mSSEDirection[0] = d[0];
-            mSSEDirection[1] = d[1];
-            mSSEDirection[2] = d[2];
-            mSSEDirection[3] = 0;
-            
-            mSSEOffset[0] = mSSEOffset[4] = -o.x;
-            mSSEOffset[1] = mSSEOffset[5] = -o.y;
-            mSSEOffset[2] = mSSEOffset[6] = -o.z;
-            mSSEOffset[3] = mSSEOffset[7] = 0.0f;
+        Ray(const __m128& o, const __m128& d)
+        {
+            mSSEOrigin = o;
+            mSSEDirection = d;
+            mSSEInvDir = _mm_div_ps(_mm_set1_ps(1.0f), mSSEDirection);
 
-            mSSEInvDir[0] = mSSEInvDir[4] = mInverseDirection.x;
-            mSSEInvDir[1] = mSSEInvDir[5] = mInverseDirection.y;
-            mSSEInvDir[2] = mSSEInvDir[6] = mInverseDirection.z;
-            mSSEInvDir[3] = mSSEInvDir[7] = 0.0f;
+            mOrigin = glm::vec3(o[0], o[1], o[2]);
+            mDirection = glm::vec3(d[0], d[1], d[2]);
+            mInverseDirection = glm::vec3(mSSEInvDir[0], mSSEInvDir[1], mSSEInvDir[2]);
         }
     };
 
