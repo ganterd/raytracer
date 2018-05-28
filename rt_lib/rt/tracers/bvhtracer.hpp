@@ -26,7 +26,7 @@ namespace rt
 	public:
 		void init(Scene* s);
 		void Trace(Scene* s, Buffer* b);
-		void Trace(Scene* s, Buffer* b,	glm::ivec2 renderRegionMin,	glm::ivec2 renderRegionMax);
+		void Trace(Scene* s, Buffer* b,	glm::ivec2 renderRegionMin,	glm::ivec2 renderRegionMax, int threadId = 0);
 
 	private:
 		glm::vec3 AccumulateLights(const RayHit& p, int depth = 0);

@@ -13,7 +13,8 @@ void rt::SimpleRayTracer::Trace(
 	Scene* s, 
 	Buffer* b, 
 	glm::ivec2 renderRegionMin, 
-	glm::ivec2 renderRegionMax
+	glm::ivec2 renderRegionMax,
+	int threadIdx
 ){
 	if(!s->mCamera)
 		return;
@@ -38,7 +39,7 @@ void rt::SimpleRayTracer::Trace(
 
 			colour = glm::pow(colour, glm::vec3(1.0f / 2.2f));
 			glm::u8vec4 c = glm::vec4(glm::clamp(colour, 0.0f, 1.0f), 1.0f) * 255.0f;
-			b->Pixel(x, y) = c;
+			b->SetPixel(x, y, c, threadIdx);
 			
 		}
 	}

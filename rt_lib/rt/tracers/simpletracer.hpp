@@ -9,7 +9,7 @@ namespace rt
 	{
 	public:
 		void Trace(Scene* s, Buffer* b);
-		void Trace(Scene* s, Buffer* b,	glm::ivec2 renderRegionMin,	glm::ivec2 renderRegionMax);
+		void Trace(Scene* s, Buffer* b,	glm::ivec2 renderRegionMin,	glm::ivec2 renderRegionMax, int threadId = 0);
 
 		glm::vec3 AccumulateLights(Scene* s, const RayHit& p);
 		bool Shoot(Scene* s, const Ray& ray, RayHit& hit);

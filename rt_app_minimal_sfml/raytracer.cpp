@@ -45,11 +45,11 @@ void RenderRegionThread(
 		currentThreadRenderRegions[threadId].w = renderRegionMax.y;
 		remainingRenderRegionsMutex.unlock();
 		
-		tracer->Trace(scene, buffer, renderRegionMin, renderRegionMax);
+		tracer->Trace(scene, buffer, renderRegionMin, renderRegionMax, threadId);
 
 		remainingRenderRegionsMutex.lock();
-		currentRenderRegionIndex++;
-		totalRemainingRenderRegions;
+		currentRenderRegionIndex += threadCount;
+		totalRemainingRenderRegions--;
 		remainingRenderRegionsMutex.unlock();
 	}
 }
@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
 
 	rt::BVHRayTracer tracer;
 
-	int threadCount = 8;
+	threadCount = 8;
 	glm::ivec2 bufferSize(960, 540);
 	renderRegionSize = glm::vec2(16, 16);
 
@@ -94,7 +94,7 @@ int main (int argc, char* argv[])
 	totalRemainingRenderRegions = totalRenderRegions;
 	
 	sf::RenderWindow window(sf::VideoMode(bufferSize.x, bufferSize.y), "Raytracer");
-	rt::SFMLBuffer buffer(bufferSize.x, bufferSize.y);
+	rt::SFMLBuffer buffer(bufferSize.x, bufferSize.y, threadCount);
 	
 	//rt::SimpleRayTracer tracer;
 	tracer.init(&scene);
@@ -112,36 +112,33 @@ int main (int argc, char* argv[])
 	
 	currentThreadRenderRegions = new glm::ivec4[threadCount];
 	actualRenderTimer.start();
+	int remaining = totalRemainingRenderRegions;
 	for(int t = 0; t < threadCount; ++t)
 	{
 		threads[t] = std::thread(RenderRegionThread, &tracer, &scene, &buffer, t);
 	}
 	
-	while(true)
+	while(remaining)
 	{
 		window.clear();
-
 		buffer.Copy();
 		window.draw(buffer.m_SFMLSprite);
-		
 
 		remainingRenderRegionsMutex.lock();
-		int remaining = totalRemainingRenderRegions;
+		remaining = totalRemainingRenderRegions;
 		for(int i = 0; i < threadCount; ++i)
 		{
 			sf::RectangleShape renderRegion(sf::Vector2<float>(renderRegionSize.x, renderRegionSize.y));
 			renderRegion.setPosition(currentThreadRenderRegions[i].x, bufferSize.y - currentThreadRenderRegions[i].y - renderRegionSize.y);
 			renderRegion.setFillColor(sf::Color(0.0f, 0.0f, 0.0f, 0.0f));
 			renderRegion.setOutlineColor(sf::Color(255.0f, 0.0, 0.0f, 255.0f));
-			renderRegion.setOutlineThickness(1.0f);
+			renderRegion.setOutlineThickness(-1.0f);
 			window.draw(renderRegion);
 		}
 		remainingRenderRegionsMutex.unlock();
 
 		window.display();
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-		
+		std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
 		sf::Event evt;
 		if(window.pollEvent(evt))
@@ -151,10 +148,16 @@ int main (int argc, char* argv[])
 		}
 	}
 
+	// Join all threads
 	for(int t = 0; t < threadCount; ++t)
 	{
 		threads[t].join();
 	}
+
+	// Draw the final image
+	buffer.Copy();
+	window.draw(buffer.m_SFMLSprite);
+	window.display();
 
 	
 

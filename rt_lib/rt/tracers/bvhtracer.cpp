@@ -22,14 +22,15 @@ void rt::BVHRayTracer::Trace(
 	Scene* s, 
 	Buffer* b, 
 	glm::ivec2 renderRegionMin, 
-	glm::ivec2 renderRegionMax
+	glm::ivec2 renderRegionMax,
+	int threadIdx
 ){
 	if(!s->mCamera)
 		return;
 	s->mCamera->SetAspectRatio((float)b->mSizex / (float)b->mSizey);
 
-	renderRegionMax.x = glm::min(renderRegionMax.x, b->mSizex);
-	renderRegionMax.y = glm::min(renderRegionMax.y, b->mSizey);
+	renderRegionMax.x = glm::max(glm::min(renderRegionMax.x, b->mSizex), 0);
+	renderRegionMax.y = glm::max(glm::min(renderRegionMax.y, b->mSizey), 0);
 
 	for(int y = renderRegionMin.y; y < renderRegionMax.y; ++y)
 	{
@@ -47,7 +48,7 @@ void rt::BVHRayTracer::Trace(
 			// Gamma correction
 			colour = glm::pow(colour, glm::vec3(1.0f / 2.2f));
 			glm::u8vec4 c = glm::vec4(glm::clamp(colour, 0.0f, 1.0f), 1.0f) * 255.0f;
-			b->Pixel(x, y) = c;
+			b->SetPixel(x, y, c, threadIdx);
 			
 		}
 	}

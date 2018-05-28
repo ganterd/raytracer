@@ -11,7 +11,7 @@
 
 namespace rt
 {
-    class AABB
+    class alignas(16) AABB
     {
     public:
         //alignas(4)glm::vec3 mMin;
