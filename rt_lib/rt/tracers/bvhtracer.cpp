@@ -42,14 +42,10 @@ void rt::BVHRayTracer::Trace(
 			glm::vec3 colour(0.0f);
 			if(Shoot(ray, hit))
 			{
-				colour = AccumulateLights(hit);
+				colour = AccumulateLights(hit, 0, b, glm::ivec2(x, y));
 			}
 
-			// Gamma correction
-			colour = glm::pow(colour, glm::vec3(1.0f / 2.2f));
-			glm::u8vec4 c = glm::vec4(glm::clamp(colour, 0.0f, 1.0f), 1.0f) * 255.0f;
-			b->SetPixel(x, y, c, threadIdx);
-			
+			b->SetPixel(x, y, colour, threadIdx);
 		}
 	}
 }
@@ -74,7 +70,7 @@ bool rt::BVHRayTracer::Occluded(const Ray& ray, float distance)
 	return bvh.occluded(ray, distance);
 }
 
-glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
+glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth, Buffer* buffer, const glm::ivec2& pixel)
 {
 	glm::vec3 meshDiffuseColour(0.8f, 0.8f, 0.8f);
 	glm::vec3 accumulatedColour = glm::vec3(0.0f);
@@ -166,7 +162,7 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 	}
 
 	// Sample hemisphere for bounces
-	glm::vec3 bouncedColour(0.0f);
+	glm::vec3 bouncedColour = accumulatedColour;
 	float bounceWeight = 1.0f / (2.0f * M_PI) / (float)mSettings.bounceSamples;
 	for(int i = 0; i < mSettings.bounceSamples; ++i)
 	{
@@ -186,10 +182,10 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 		if(Shoot(ray, hit))
 		{
 			float dot = glm::clamp(glm::dot(p.mInterpolatedNormal, sampleDir), 0.0f, 1.0f);
-			bouncedColour += AccumulateLights(hit, depth + 1) * dot / glm::max(hit.mDistance * hit.mDistance, 1.0f);
+			bouncedColour += AccumulateLights(hit, depth + 1, buffer, pixel) * dot / glm::max(hit.mDistance * hit.mDistance, 1.0f) * meshDiffuseColour * bounceWeight;
+			//buffer->SetPixel(pixel.x, pixel.y, bouncedColour);
 		}
 	}
-	bouncedColour *= bounceWeight;
 
 	return (accumulatedColour + bouncedColour) * meshDiffuseColour;
 }

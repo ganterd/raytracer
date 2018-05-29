@@ -14,8 +14,6 @@ namespace rt
     class alignas(16) AABB
     {
     public:
-        //alignas(4)glm::vec3 mMin;
-        //alignas(4)glm::vec3 mMax;
         alignas(16)__m128 mMin;
         alignas(16)__m128 mMax;
         alignas(4)glm::vec3 mSize;
@@ -35,12 +33,9 @@ namespace rt
             __m128 SSEp = _mm_set_ps(0.0f, p.z, p.y, p.x);
             mMin = _mm_min_ps(mMin, SSEp);
             mMax = _mm_max_ps(mMax, SSEp);
-            //mMin = glm::min(mMin, p);
-            //mMax = glm::max(mMax, p);
             mSize.x = mMax[0] - mMin[0];
             mSize.y = mMax[1] - mMin[1];
             mSize.z = mMax[2] - mMin[2];
-            //refreshSSE();
         }
 
         /**
@@ -48,14 +43,11 @@ namespace rt
          */
         void grow(const AABB& other)
         {
-            //mMin = glm::min(mMin, other.mMin);
-            //mMax = glm::max(mMax, other.mMax);
             mMin = _mm_min_ps(mMin, other.mMin);
             mMax = _mm_max_ps(mMax, other.mMax);
             mSize.x = mMax[0] - mMin[0];
             mSize.y = mMax[1] - mMin[1];
             mSize.z = mMax[2] - mMin[2];
-            //refreshSSE();
         }
 
         float surfaceArea()
@@ -98,7 +90,7 @@ namespace rt
             tmax = std::min(tmax, _max[1]);
             tmax = std::min(tmax, _max[2]);
         
-            return tmax >= tmin;
+            return tmax >= tmin && tmax > 0;
         }
 
         friend std::ostream& operator<< (std::ostream& os, const AABB& a)

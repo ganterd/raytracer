@@ -65,6 +65,8 @@ int main (int argc, char* argv[])
 	glm::ivec2 bufferSize(960, 540);
 	renderRegionSize = glm::vec2(16, 16);
 
+	bool drawOutline = false;
+
 	for(int i = 2; i < argc; ++i)
 	{
 		std::string arg(argv[i]);
@@ -83,6 +85,8 @@ int main (int argc, char* argv[])
 			renderRegionSize.x = std::stoi(param);
 		else if(arg == "-rsy")
 			renderRegionSize.y = std::stoi(param);
+		else if(arg == "-ol" || arg == "--outline")
+			drawOutline = true;
 	}
 
 	//const glm::ivec2 bufferSize(640, 360);
@@ -126,14 +130,17 @@ int main (int argc, char* argv[])
 
 		remainingRenderRegionsMutex.lock();
 		remaining = totalRemainingRenderRegions;
-		for(int i = 0; i < threadCount; ++i)
+		if(drawOutline)
 		{
-			sf::RectangleShape renderRegion(sf::Vector2<float>(renderRegionSize.x, renderRegionSize.y));
-			renderRegion.setPosition(currentThreadRenderRegions[i].x, bufferSize.y - currentThreadRenderRegions[i].y - renderRegionSize.y);
-			renderRegion.setFillColor(sf::Color(0.0f, 0.0f, 0.0f, 0.0f));
-			renderRegion.setOutlineColor(sf::Color(255.0f, 0.0, 0.0f, 255.0f));
-			renderRegion.setOutlineThickness(-1.0f);
-			window.draw(renderRegion);
+			for(int i = 0; i < threadCount; ++i)
+			{
+				sf::RectangleShape renderRegion(sf::Vector2<float>(renderRegionSize.x, renderRegionSize.y));
+				renderRegion.setPosition(currentThreadRenderRegions[i].x, bufferSize.y - currentThreadRenderRegions[i].y - renderRegionSize.y);
+				renderRegion.setFillColor(sf::Color(0.0f, 0.0f, 0.0f, 0.0f));
+				renderRegion.setOutlineColor(sf::Color(255.0f, 0.0, 0.0f, 255.0f));
+				renderRegion.setOutlineThickness(-1.0f);
+				window.draw(renderRegion);
+			}
 		}
 		remainingRenderRegionsMutex.unlock();
 

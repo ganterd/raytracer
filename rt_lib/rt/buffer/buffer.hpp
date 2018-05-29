@@ -37,6 +37,20 @@ namespace rt
 			mThreadLocks[t].unlock();
 		}
 
+		void SetPixel(int x, int y, const glm::vec3& normalisedColour, int t = 0)
+		{
+			glm::u8vec4 c = glm::vec4(
+				glm::clamp(
+					glm::pow(normalisedColour, glm::vec3(1.0f / 2.2f)), 
+					0.0f, 1.0f
+				),
+				1.0f
+			) * 255.0f;
+			mThreadLocks[t].lock();
+			Pixel(x, y) = c;
+			mThreadLocks[t].unlock();
+		}
+
 		void WriteLock()
 		{
 			for(int i = 0; i < mNumThreadLocks; ++i)

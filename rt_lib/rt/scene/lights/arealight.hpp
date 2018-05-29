@@ -36,8 +36,8 @@ namespace rt
 			const glm::vec3& colourDiffuse,
 			const glm::vec3& colourSpecular,
 			const glm::vec3& colourAmbient,
-			int numSamplePositionsX = 8,
-			int numSamplePositionsY = 8
+			int numSamplePositionsX = 4,
+			int numSamplePositionsY = 4
 		)
 		{
 			mType = Area;
