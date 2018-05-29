@@ -42,7 +42,7 @@ void rt::BVHRayTracer::Trace(
 			glm::vec3 colour(0.0f);
 			if(Shoot(ray, hit))
 			{
-				colour = AccumulateLights(hit, 0, b, glm::ivec2(x, y));
+				colour = AccumulateLights(hit, 0);
 			}
 
 			b->SetPixel(x, y, colour, threadIdx);
@@ -70,7 +70,7 @@ bool rt::BVHRayTracer::Occluded(const Ray& ray, float distance)
 	return bvh.occluded(ray, distance);
 }
 
-glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth, Buffer* buffer, const glm::ivec2& pixel)
+glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 {
 	glm::vec3 meshDiffuseColour(0.8f, 0.8f, 0.8f);
 	glm::vec3 accumulatedColour = glm::vec3(0.0f);
@@ -164,26 +164,37 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth, Buffer*
 	// Sample hemisphere for bounces
 	glm::vec3 bouncedColour = accumulatedColour;
 	float bounceWeight = 1.0f / (2.0f * M_PI) / (float)mSettings.bounceSamples;
+	float randRcp = 1.0f / (float)RAND_MAX;
 	for(int i = 0; i < mSettings.bounceSamples; ++i)
 	{
-		float rY = (float)std::rand() * (1.0f / (float)RAND_MAX);
-		float rX = (float)std::rand() * (1.0f / (float)RAND_MAX);
+		float rY = (float)std::rand() * randRcp;
+		float rX = (float)std::rand() * randRcp;
 		float theta = sqrtf(1.0f - rY * rY); 
 		float phi = 2.0f * M_PI * rX; 
 		float x = theta * cosf(phi); 
 		float z = theta * sinf(phi); 
-		glm::vec3 sampleDir(x, rX, z);
-		sampleDir = glm::normalize(sampleDir);
-		sampleDir = p.mTri->localToWorldVector(sampleDir);
 
-		Ray ray(p.mHitPosition + p.mSurfaceNormal * 0.0001f, sampleDir);
+		__m128 sampleDirection;
+		sampleDirection[0] = x;
+		sampleDirection[1] = rX;
+		sampleDirection[2] = z;
+		sampleDirection[3] = 0.0f;
+		float d = _mm_cvtss_f32(_mm_sqrt_ss(_mm_dp_ps(sampleDirection, sampleDirection, 0x71)));
+		sampleDirection = _mm_div_ps(sampleDirection, _mm_set1_ps(d));
+		sampleDirection = p.mTri->localToWorldVector(sampleDirection);
+
+		Ray ray(biasPosition, sampleDirection);
 		RayHit hit;
 		
 		if(Shoot(ray, hit))
 		{
-			float dot = glm::clamp(glm::dot(p.mInterpolatedNormal, sampleDir), 0.0f, 1.0f);
-			bouncedColour += AccumulateLights(hit, depth + 1, buffer, pixel) * dot / glm::max(hit.mDistance * hit.mDistance, 1.0f) * meshDiffuseColour * bounceWeight;
-			//buffer->SetPixel(pixel.x, pixel.y, bouncedColour);
+			// Dot product of surface normal and light dir
+			__m128 dp = _mm_mul_ps(hitNormal, sampleDirection);
+			dp = _mm_hadd_ps(dp, dp);
+			dp = _mm_hadd_ps(dp, dp);
+			float dot = dp[0];
+
+			bouncedColour += AccumulateLights(hit, depth + 1) * dot / glm::max(hit.mDistance, 1.0f) * meshDiffuseColour * bounceWeight;
 		}
 	}
 

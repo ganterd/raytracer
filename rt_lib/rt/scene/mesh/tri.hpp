@@ -17,6 +17,10 @@ namespace rt
 		alignas(16) __m128 sp0;
 		alignas(16) __m128 sp1;
 
+		alignas(16) __m128 tx;
+		alignas(16) __m128 ty;
+		alignas(16) __m128 tz;
+
 		AABB aabb;
 		__m128 mSSEOrigin;
 		__m128 mSSEEdge1, mSSEEdge2;
@@ -58,6 +62,10 @@ namespace rt
 			mSSEOrigin = _mm_set_ps(0.0f, v0.z, v0.y, v0.x);
 			mSSEEdge1 = _mm_set_ps(0.0f, edge1.z, edge1.y, edge1.x);
 			mSSEEdge2 = _mm_set_ps(0.0f, edge2.z, edge2.y, edge2.x);
+
+			tx = _mm_set_ps(0.0f, surfacePerpendicular0.x, surfaceNormal.x, surfacePerpendicular1.x);
+			ty = _mm_set_ps(0.0f, surfacePerpendicular0.y, surfaceNormal.y, surfacePerpendicular1.y);
+			tz = _mm_set_ps(0.0f, surfacePerpendicular0.z, surfaceNormal.z, surfacePerpendicular1.z);
 		}
 
 		inline float DotProduct(const __m128& a, const __m128& b)
@@ -146,6 +154,21 @@ namespace rt
 			__m128 o = _mm_add_ps(_mm_add_ps(vx, vy), vz);
 
 			return glm::vec3(o[0], o[1], o[2]);
+		}
+
+		__m128 localToWorldVector(const __m128& v)
+		{
+			__m128 vx = _mm_mul_ps(v, tx);
+			__m128 vy = _mm_mul_ps(v, ty);
+			__m128 vz = _mm_mul_ps(v, tz);
+
+			__m128 o;
+			o[0] = vx[0] + vx[1] + vx[2];
+			o[1] = vy[0] + vy[1] + vy[2];
+			o[2] = vz[0] + vz[1] + vz[2];
+			o[3] = 0.0f;
+
+			return o;
 		}
 	};
 }
