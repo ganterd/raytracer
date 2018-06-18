@@ -63,11 +63,11 @@ namespace rt
 
         void construct(rt::Scene* scene);
 
-        bool cast(const rt::Ray& r, rt::RayHit& hit);
-        bool cast(BVHNode* n, const rt::Ray& r, rt::RayHit& hit);
+        bool cast(rt::Ray* r, rt::RayHit& hit);
+        bool castDual(rt::BVHNode* n, rt::Ray* ray, rt::RayHit& hit);
 
-        bool occluded(const rt::Ray& ray, const float distance);
-        bool occluded(BVHNode* n, const rt::Ray& ray, const float distance);
+        bool occluded(rt::Ray* ray, const float distance);
+        bool occludedDual(BVHNode* n, rt::Ray* ray, const float distance);
 
     private:
         rt::BVH::Bin** mBins;

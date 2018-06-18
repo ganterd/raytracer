@@ -66,6 +66,7 @@ int main (int argc, char* argv[])
 	renderRegionSize = glm::vec2(16, 16);
 
 	bool drawOutline = false;
+	bool quitAfterRender = false;
 
 	for(int i = 2; i < argc; ++i)
 	{
@@ -87,6 +88,8 @@ int main (int argc, char* argv[])
 			renderRegionSize.y = std::stoi(param);
 		else if(arg == "-ol" || arg == "--outline")
 			drawOutline = true;
+		else if(arg == "-q" || arg == "--quit")
+			quitAfterRender = true;
 	}
 
 	//const glm::ivec2 bufferSize(640, 360);
@@ -173,7 +176,9 @@ int main (int argc, char* argv[])
 	delete[] threadRenderIndex;
 	std::cout << "Done in " << renderAndCopyTimer.getTime() << "s (render " << actualRenderTime << "s)" << std::endl;
 
-	while(window.isOpen())
+
+
+	while(window.isOpen() && !quitAfterRender)
 	{
 		sf::Event evt;
 		while(window.pollEvent(evt))

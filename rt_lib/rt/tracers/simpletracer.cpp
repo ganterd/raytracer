@@ -48,12 +48,12 @@ void rt::SimpleRayTracer::Trace(
 bool rt::SimpleRayTracer::Shoot(Scene* s, const Ray& ray, RayHit& hit)
 {
 
-	int triCount = s->m_Tris.size();
+	int triCount = s->m_TotalTris;
 	Tri* tris = &s->m_Tris[0];
 	for(int i = 0; i < triCount; ++i)
 	{
 		RayHit currentHit;
-		if(tris[i].rayIntersection(ray, currentHit))
+		if(tris[i].rayIntersection(&ray, currentHit))
 		{
 			if(currentHit.mDistance < hit.mDistance)
 			{
@@ -77,12 +77,12 @@ bool rt::SimpleRayTracer::Shoot(Scene* s, const Ray& ray, RayHit& hit)
 
 bool rt::SimpleRayTracer::Occluded(Scene* s, const Ray& ray, float distance)
 {
-	int triCount = s->m_Tris.size();
+	int triCount = s->m_TotalTris;
 	Tri* tris = &s->m_Tris[0];
 	for(int i = 0; i < triCount; ++i)
 	{
 		RayHit currentHit;
-		if(tris[i].rayIntersection(ray, currentHit))
+		if(tris[i].rayIntersection(&ray, currentHit))
 		{	
 			if(currentHit.mDistance < distance)
 				return true;

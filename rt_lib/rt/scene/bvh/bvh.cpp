@@ -14,16 +14,16 @@ rt::BVH::~BVH()
 
 void rt::BVH::construct(rt::Scene* scene)
 {
-    
-
-    Tri** tris = new Tri*[scene->m_Tris.size()];
-    for(unsigned int i = 0; i < scene->m_Tris.size(); ++i)
+    Tri** tris = new Tri*[scene->m_TotalTris];
+    for(unsigned int i = 0; i < scene->m_TotalTris; ++i)
     {
         tris[i] = &scene->m_Tris[i];
     }
 
     mCurrentlyAllocatedNodes = 0;
-    mAllocatedNodes = new rt::BVHNode[scene->m_Tris.size() * 2 - 1];
+    //mAllocatedNodes = new rt::BVHNode[scene->m_Tris.size() * 2 - 1];
+    size_t allocationSize = (scene->m_TotalTris * 2 - 1) * sizeof(rt::BVHNode) + sizeof(rt::BVHNode);
+    mAllocatedNodes = (rt::BVHNode*)_mm_malloc(allocationSize, 32);
 
     deepestLevel = 0;
     numSplitNodes = 0;
@@ -34,7 +34,7 @@ void rt::BVH::construct(rt::Scene* scene)
     createBins();
     rt::Timer constructionTimer;
     constructionTimer.start();
-    mRoot = recursiveConstruct(tris, scene->m_Tris.size(), scene->mCentroidsAABB, 0);
+    mRoot = recursiveConstruct(tris, scene->m_TotalTris, scene->mCentroidsAABB, 0);
     constructionTimer.stop();
     freeBins();
 
@@ -94,12 +94,14 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     {
         BVHNode* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
         n->mIsLeaf = true;
+        n->mNumTris = 0;
         for(int i = 0; i < numTris; ++i)
         {
             n->mTris[(size_t)n->mNumTris++] = tris[i];
             n->mAABB.grow(tris[i]->aabb);
         }
         numLeafNodes++;
+        delete[] tris;
         return n;
     }
 
@@ -165,12 +167,9 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     delete[] tris;
 
     BVHNode* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
-    n->mLeft = recursiveConstruct(trisLeft, best.numPrimitives_L, best.centroidAABB_L, level + 1);
-    n->mRight = recursiveConstruct(trisRight, best.numPrimitives_R, best.centroidAABB_R, level + 1);
-
-    n->mAABB.grow(n->mLeft->mAABB);
-    n->mAABB.grow(n->mRight->mAABB);
-    
+    n->mIsLeaf = false;
+    n->AssignLeft(recursiveConstruct(trisLeft, best.numPrimitives_L, best.centroidAABB_L, level + 1));
+    n->AssignRight(recursiveConstruct(trisRight, best.numPrimitives_R, best.centroidAABB_R, level + 1));
     numSplitNodes++;
     return n;
 }
@@ -251,79 +250,86 @@ rt::BVHBestSplit rt::BVH::findBestSplit()
         }
     }
 
-    // std::cout << "Best Cost Split: Axis[" << best.axis << "], Split[" << best.splitIndex <<"], Cost "<< best.cost <<"]" << std::endl;
-    // std::cout << "|- Left AABB " << best.AABBLeft << std::endl;
-    // std::cout << "|- Right AABB " << best.AABBRight << std::endl;
-    // std::cout << "|- Left Centroid AABB " << best.centroidAABB_L << std::endl;
-    // std::cout << "|- Right Centroid AABB " << best.centroidAABB_R << std::endl;
-    // std::cout << "|- Left/Right Primitives (" << best.numPrimitives_L << "/" << best.numPrimitives_R << ")" << std::endl;
-
     return best;
 }
 
-bool rt::BVH::cast(const rt::Ray& ray, rt::RayHit& hit)
+bool rt::BVH::cast(rt::Ray* ray, rt::RayHit& hit)
 {
-    return cast(mRoot, ray, hit);
+    //return cast(mRoot, ray, hit);
+    bool b = castDual(mRoot, ray, hit);
+    //std::cout << "Ray tested " << hit.mTrisTested << " tris" << std::endl;
+    return b;
 }
 
-bool rt::BVH::cast(rt::BVHNode* n, const rt::Ray& ray, rt::RayHit& hit)
+bool rt::BVH::castDual(rt::BVHNode* n, rt::Ray* ray, rt::RayHit& hit)
 {
-	if(n->mAABB.intersect(ray))
-	{
-		if(n->mIsLeaf)
-		{
-			bool hasHit = false;
-			for(int t = 0; t < n->mNumTris; ++t)
-			{
-				RayHit currentHit;
-				
-				if(n->mTris[t]->rayIntersection(ray, currentHit))
-				{
-					hasHit = true;
-					if(currentHit.mDistance < hit.mDistance)
-					{
-						hit = currentHit;
-					}
-				}
-			}
-			return hasHit;
-		}
-		else
-		{
-			return cast(n->mLeft, ray, hit) | cast(n->mRight, ray, hit);
-		}
-	}
-	return false;
-}
-
-bool rt::BVH::occluded(const rt::Ray& ray, const float distance)
-{
-    return occluded(mRoot, ray, distance);
-}
-
-bool rt::BVH::occluded(rt::BVHNode* n, const rt::Ray& ray, const float distance)
-{
-    if(n->mAABB.intersect(ray))
+        
+    if(n->mIsLeaf)
     {
-        if(n->mIsLeaf)
+        bool hasHit = false;
+        for(int t = 0; t < n->mNumTris; ++t)
         {
-            for(int t = 0; t < n->mNumTris; ++t)
+            RayHit currentHit;
+            ++hit.mTrisTested;
+            if(n->mTris[t]->rayIntersection(ray, currentHit))
             {
-                RayHit currentHit;
-                if(n->mTris[t]->rayIntersection(ray, currentHit))
+                hasHit = true;
+                if(currentHit.mDistance < hit.mDistance)
                 {
-                    if(currentHit.mDistance < distance)
-                        return true;
+                    hit = currentHit;
                 }
             }
         }
-        else
+        return hasHit;
+    }
+    else
+    {
+        // bool left, right;
+        // n->intersectBothChildren(ray, left, right);
+        // if(left) left = castDual(n->mLeft, ray, hit);
+        // if(right) right = castDual(n->mRight, ray, hit);
+        // return left | right;
+        if(n->mAABB.intersect(ray))
         {
-            if(occluded(n->mLeft, ray, distance))
-                return true;
-            else
-                return occluded(n->mRight, ray, distance);
+            bool left = castDual(n->mLeft, ray, hit);
+            bool right = castDual(n->mRight, ray, hit);
+            return left | right;
         }
+        return false;
+    }
+}
+
+bool rt::BVH::occluded(rt::Ray* ray, const float distance)
+{
+    //return occluded(mRoot, ray, distance);
+    return occludedDual(mRoot, ray, distance);
+}
+
+bool rt::BVH::occludedDual(rt::BVHNode* n, rt::Ray* ray, const float distance)
+{
+    if(n->mIsLeaf)
+    {
+        for(int t = 0; t < n->mNumTris; ++t)
+        {
+            RayHit currentHit;
+            if(n->mTris[t]->rayIntersection(ray, currentHit))
+            {
+                if(currentHit.mDistance < distance)
+                    return true;
+            }
+        }
+    }
+    else
+    {
+
+        bool left, right;
+        n->intersectBothChildren(ray, left, right);
+        if(left)
+            if(occludedDual(n->mLeft, ray, distance))
+                return true;
+        if(right)
+            if(occludedDual(n->mRight, ray, distance))
+                return true;
     }
 	return false;
 }

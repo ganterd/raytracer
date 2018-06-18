@@ -30,7 +30,7 @@ namespace rt
 
 	private:
 		glm::vec3 AccumulateLights(const RayHit& p, int depth = 0);
-		bool Shoot(const Ray& ray, RayHit& hit);
-		bool Occluded(const Ray& ray, float d);
+		bool Shoot(Ray* ray, RayHit& hit);
+		bool Occluded(Ray* ray, float d);
 	};
 }

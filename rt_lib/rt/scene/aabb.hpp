@@ -11,12 +11,12 @@
 
 namespace rt
 {
-    class alignas(16) AABB
+    class alignas(alignof(__m128)) AABB
     {
     public:
-        alignas(16)__m128 mMin;
-        alignas(16)__m128 mMax;
-        alignas(4)glm::vec3 mSize;
+        alignas(alignof(__m128))__m128 mMin;
+        alignas(alignof(__m128))__m128 mMax;
+        glm::vec3 mSize;
 
         AABB()
         {
@@ -75,12 +75,12 @@ namespace rt
             return newAABB;
         }
 
-        bool intersect(const rt::Ray& r) const
+        bool intersect(const rt::Ray* r) const
         {
-            __m128 _tmin = _mm_mul_ps(_mm_sub_ps(mMin, r.mSSEOrigin), r.mSSEInvDir);
-            __m128 _tmax = _mm_mul_ps(_mm_sub_ps(mMax, r.mSSEOrigin), r.mSSEInvDir);
-            __m128 _min = _mm_min_ps(_tmin, _tmax);
-            __m128 _max = _mm_max_ps(_tmin, _tmax);
+            alignas(alignof(__m128)) __m128 _tmin = _mm_mul_ps(_mm_sub_ps(mMin, r->mSSEOrigin), r->mSSEInvDir);
+            alignas(alignof(__m128)) __m128 _tmax = _mm_mul_ps(_mm_sub_ps(mMax, r->mSSEOrigin), r->mSSEInvDir);
+            alignas(alignof(__m128)) __m128 _min = _mm_min_ps(_tmin, _tmax);
+            alignas(alignof(__m128)) __m128 _max = _mm_max_ps(_tmin, _tmax);
 
             float tmin = _min[0];
             tmin = std::max(tmin, _min[1]);

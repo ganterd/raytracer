@@ -36,7 +36,8 @@ void rt::BVHRayTracer::Trace(
 	{
 		for(int x = renderRegionMin.x; x < renderRegionMax.x; ++x)
 		{
-			Ray ray = s->mCamera->Ray(x, y, b->mSizex, b->mSizey);
+			rt::Ray* ray = (rt::Ray*)_mm_malloc(sizeof(rt::Ray), 32);
+			*ray = s->mCamera->Ray(x, y, b->mSizex, b->mSizey);
 			
 			RayHit hit;
 			glm::vec3 colour(0.0f);
@@ -44,18 +45,20 @@ void rt::BVHRayTracer::Trace(
 			{
 				colour = AccumulateLights(hit, 0);
 			}
+		
+			_mm_free(ray);
 
 			b->SetPixel(x, y, colour, threadIdx);
 		}
 	}
 }
 
-bool rt::BVHRayTracer::Shoot(const Ray& ray, RayHit& hit)
+bool rt::BVHRayTracer::Shoot(Ray* ray, RayHit& hit)
 {
 	if(bvh.cast(ray, hit))
 	{
 		hit.mInterpolatedNormal = hit.mTri->interpolatedNormal(hit.mHitPosition);
-		if(glm::dot(hit.mSurfaceNormal, ray.direction()) > 0.0f)
+		if(glm::dot(hit.mSurfaceNormal, ray->direction()) > 0.0f)
 		{
 			hit.mSurfaceNormal *= -1.0f;
 			hit.mInterpolatedNormal *= -1.0f;
@@ -65,7 +68,7 @@ bool rt::BVHRayTracer::Shoot(const Ray& ray, RayHit& hit)
 	return false;
 }
 
-bool rt::BVHRayTracer::Occluded(const Ray& ray, float distance)
+bool rt::BVHRayTracer::Occluded(rt::Ray* ray, float distance)
 {
 	return bvh.occluded(ray, distance);
 }
@@ -94,6 +97,9 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 	__m128 hitBias = _mm_set1_ps(0.01f);
 
 	__m128 biasPosition = _mm_fmadd_ps(hitNormal, hitBias, hitPosition);
+
+	rt::Ray* ray = (rt::Ray*)_mm_malloc(sizeof(rt::Ray), 32);
+	ray->setOrigin(biasPosition);
 	
 	// Check all lights as if they were a point light for now
 	int numLights = mTargetScene->mLights.size();
@@ -113,7 +119,7 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 			if(dot > 0.0f)
 			{
 				Ray r(p.mHitPosition + p.mSurfaceNormal * 0.01f, toLight);
-				if(!Occluded(r, d))
+				if(!Occluded(&r, d))
 				{
 					float intensity = glm::max(dot * light->intensity(d), 0.0f);
 
@@ -149,8 +155,8 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 					
 					if(dot > 0.0f)
 					{
-						Ray r(biasPosition, toLight);
-						if(!Occluded(r, d))
+						ray->setDirection(toLight);
+						if(!Occluded(ray, d))
 						{
 							float intensity = dot * light.intensity(d);
 							accumulatedColour += light.mColourDiffuse * intensity * sampleWeight;
@@ -183,7 +189,7 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 		sampleDirection = _mm_div_ps(sampleDirection, _mm_set1_ps(d));
 		sampleDirection = p.mTri->localToWorldVector(sampleDirection);
 
-		Ray ray(biasPosition, sampleDirection);
+		ray->setDirection(sampleDirection);
 		RayHit hit;
 		
 		if(Shoot(ray, hit))
@@ -197,6 +203,8 @@ glm::vec3 rt::BVHRayTracer::AccumulateLights(const RayHit& p, int depth)
 			bouncedColour += AccumulateLights(hit, depth + 1) * dot / glm::max(hit.mDistance, 1.0f) * meshDiffuseColour * bounceWeight;
 		}
 	}
+
+	_mm_free(ray);
 
 	return (accumulatedColour + bouncedColour) * meshDiffuseColour;
 }

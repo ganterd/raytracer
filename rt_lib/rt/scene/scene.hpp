@@ -24,7 +24,7 @@ namespace rt
 		const aiScene* assimpScene;
 
 		std::vector<Mesh*> m_Meshes;
-		std::vector<Tri> m_Tris;
+		//std::vector<Tri> m_Tris;
 		std::vector<Light*> mLights;
 
 		AABB mGeometryAABB;
@@ -33,6 +33,8 @@ namespace rt
 		Camera* mCamera;
 
 		size_t m_TotalTris;
+		rt::Tri* m_Tris;
+		size_t m_AssignedTris;
 
 		bool fromFile(const std::string& file);
 

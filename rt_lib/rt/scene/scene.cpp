@@ -16,14 +16,19 @@ bool rt::Scene::fromFile(const std::string& file)
 	mCentroidsAABB = rt::AABB::infinity();
 
 	m_TotalTris = 0;
+	for(unsigned int m = 0; m < assimpScene->mNumMeshes; ++m)
+		m_TotalTris += assimpScene->mMeshes[m]->mNumFaces;
+
+	m_Tris = (rt::Tri*)_mm_malloc(m_TotalTris * sizeof(rt::Tri), alignof(__m128));
+	m_AssignedTris = 0;
 
 	std::cout << "Scene:" << std::endl;
+	std::cout << "   |- Total Tris: " << m_TotalTris << std::endl;
 	std::cout << "   |- Meshes: " << assimpScene->mNumMeshes << std::endl;
 	
 	aiMatrix4x4 identity;
 	NodeRecurse(assimpScene->mRootNode, identity);
-
-	std::cout << "   |- Total Tris: " << m_TotalTris << std::endl;
+	
 	std::cout << "   |- Centroid AABB " << mCentroidsAABB << std::endl;
 	std::cout << "   |- Geometry AABB " << mGeometryAABB << std::endl;
 
@@ -71,12 +76,12 @@ void rt::Scene::ProcessMesh(aiMesh* m, const aiMatrix4x4& transform)
 		n2 = mat * glm::vec4(AssimpToGLM(m->mNormals[m->mFaces[t].mIndices[2]]), 0.0f);
 
 		Tri tri = Tri(glm::vec3(v0), glm::vec3(v1), glm::vec3(v2), glm::vec3(n0), glm::vec3(n1), glm::vec3(n2));
-		m_Tris.push_back(tri);
+		m_Tris[m_AssignedTris++] = tri;
 
 		mCentroidsAABB.grow(tri.centroid);
 		mGeometryAABB.grow(tri.aabb);
 	}
-	m_TotalTris += tris;
+	//m_TotalTris += tris;
 
 	std::cout << std::endl;
 }

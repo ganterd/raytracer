@@ -16,7 +16,7 @@ namespace rt
 
         rt::RayTracer::Settings mSettings;
 
-        virtual void init(rt::Scene* s){};
+        virtual void init(rt::Scene*){};
         virtual void Trace(rt::Scene* s, rt::Buffer* b, glm::ivec2 renderRegionMin, glm::ivec2 renderRegionMax, int threadId = 1) = 0;
     };
 }
