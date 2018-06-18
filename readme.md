@@ -1,6 +1,6 @@
 # Simple BVH Raytracer
 
-Pretty simple raytracer using C++ on CPU (no GPU acceleration). Made so I could better understand BVH construction and traversal. Not massively optimised at all. Possible optimisations outlined below.
+Pretty simple raytracer using C++ on CPU (no GPU acceleration). Made so I could better understand BVH construction and traversal using SSE/AVX SIMD instructions. Not massively optimised at all. Possible optimisations outlined below.
 
 ## Building
 Should just be a simple cmake generate and build process. Libraries used:
