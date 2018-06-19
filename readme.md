@@ -59,6 +59,12 @@ The project is divided into two sub-projects.
 * `rt_lib` does the bulk of the work, containing almost all of the raytracing logic. This is built as a dynamically linked library to be used by front-facing applications like:
 * `rt_app_minimal_sfml` is an executable that uses SFML as a cross-platform windowing method. Also contains a concrete buffer that tranfers buffer data from an internal representation to an SFML representation on demand.
 
+## Future Bits (Not Done Yet) 
+* Material Properties
+* Texture Mapping 
+* Transparency
+
 ## Possible Optimisations
 * Re-arranging BVH Ray-AABB intersection tests to test 4 or 8 AABBs at a time using SSE/AVX. Example of this can be seen in the Blender source code.
 * Using tight-wrapping bounding boxes rather than AABBs.
+* GPU raytracing 
