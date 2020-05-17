@@ -1,9 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
-
-#include <rt/scene/mesh/tri.hpp>
-
 #include <xmmintrin.h>
 
 namespace rt
@@ -54,18 +50,18 @@ namespace rt
         }
     };
 
-    class Tri;
-    typedef struct _RayHit
-    {
-    public:
+    // class Tri;
+    // typedef struct _RayHit
+    // {
+    // public:
 
-        float mDistance = std::numeric_limits<float>::max();
-        glm::vec3 mHitPosition;
-        glm::vec3 mSurfaceNormal;
-        glm::vec3 mInterpolatedNormal;
-        Tri* mTri = nullptr;
+    //     float mDistance = std::numeric_limits<float>::max();
+    //     glm::vec3 mHitPosition;
+    //     glm::vec3 mSurfaceNormal;
+    //     glm::vec3 mInterpolatedNormal;
+    //     Tri* mTri = nullptr;
 
-        int mTrisTested = 0;
-        int mAABBsTested = 0;
-    } RayHit;
+    //     int mTrisTested = 0;
+    //     int mAABBsTested = 0;
+    // } RayHit;
 }

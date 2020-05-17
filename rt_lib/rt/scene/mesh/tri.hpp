@@ -1,6 +1,4 @@
 #pragma once
-#include <glm/glm.hpp>
-
 #include <rt/scene/ray.hpp>
 #include <rt/scene/aabb.hpp>
 

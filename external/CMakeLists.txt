@@ -14,6 +14,5 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     endif()
 endif()
 
-
-add_subdirectory(glm)
 add_subdirectory(assimp)
+add_subdirectory(gtest)
