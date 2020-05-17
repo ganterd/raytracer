@@ -6,36 +6,6 @@ TEST(Buffer, create)
     rt::Buffer b(512, 512);
 }
 
-TEST(Buffer, create_write_read_uchar4)
-{
-    rt::Buffer b(512, 512);
-
-    for(int h = 0; h < 512; ++h)
-    {
-        for(int w = 0; w < 512; ++w)
-        {
-            b.SetPixel(w, h, uchar4(
-                (char)w,
-                (char)h,
-                (char)0,
-                (char)255
-            ));
-        }
-    }
-
-    for(int h = 0; h < 512; ++h)
-    {
-        for(int w = 0; w < 512; ++w)
-        {
-            uchar4 p = b.Pixel(w, h);
-            EXPECT_EQ(p.r, (unsigned char)w);
-            EXPECT_EQ(p.g, (unsigned char)h);
-            EXPECT_EQ(p.b, (unsigned char)0);
-            EXPECT_EQ(p.a, (unsigned char)255);
-        }
-    }
-}
-
 TEST(Buffer, create_write_read_float4)
 {
     rt::Buffer b(256, 256);
@@ -45,12 +15,12 @@ TEST(Buffer, create_write_read_float4)
     {
         for(int w = 0; w < 256; ++w)
         {
-            b.SetPixel(w, h, float4(
+            b.Pixel(w, h) =  float4(
                 (float)w / (float)255,
                 (float)h / (float)255,
                 0.0f,
-                10.0f
-            ));
+                1.0f
+            );
         }
     }
 
@@ -58,11 +28,17 @@ TEST(Buffer, create_write_read_float4)
     {
         for(int w = 0; w < 256; ++w)
         {
-            uchar4 p = b.Pixel(w, h);
-            EXPECT_EQ(p.r, (unsigned char)w);
-            EXPECT_EQ(p.g, (unsigned char)h);
-            EXPECT_EQ(p.b, (unsigned char)0);
-            EXPECT_EQ(p.a, (unsigned char)255);
+            float4 expected(
+                (float)w / (float)255,
+                (float)h / (float)255,
+                0.0f,
+                1.0f
+            );
+            float4 p = b.Pixel(w, h);
+            EXPECT_EQ(p.r, expected.r);
+            EXPECT_EQ(p.g, expected.g);
+            EXPECT_EQ(p.b, expected.b);
+            EXPECT_EQ(p.a, expected.a);
         }
     }
 }
@@ -76,12 +52,12 @@ TEST(Buffer, write_to_ppm)
     {
         for(int w = 0; w < 256; ++w)
         {
-            b.SetPixel(w, h, float4(
+            b.Pixel(w, h) = float4(
                 (float)w / (float)255,
                 (float)h / (float)255,
                 0.0f,
-                10.0f
-            ));
+                1.0f
+            );
         }
     }
 
