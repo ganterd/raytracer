@@ -5,13 +5,13 @@ class uchar4
 public:
     union
     {
-        char data[4];
+        unsigned char data[4];
         struct {
-            char r, g, b, a;
+            unsigned char r, g, b, a;
         };
         struct 
         {
-            char x, y, z, w;
+            unsigned char x, y, z, w;
         };
     };
 

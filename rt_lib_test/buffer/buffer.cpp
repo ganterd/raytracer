@@ -28,10 +28,10 @@ TEST(Buffer, create_write_read_uchar4)
         for(int w = 0; w < 512; ++w)
         {
             uchar4 p = b.Pixel(w, h);
-            EXPECT_EQ(p.r, (char)w);
-            EXPECT_EQ(p.g, (char)h);
-            EXPECT_EQ(p.b, (char)0);
-            EXPECT_EQ(p.a, (char)255);
+            EXPECT_EQ(p.r, (unsigned char)w);
+            EXPECT_EQ(p.g, (unsigned char)h);
+            EXPECT_EQ(p.b, (unsigned char)0);
+            EXPECT_EQ(p.a, (unsigned char)255);
         }
     }
 }
@@ -59,10 +59,31 @@ TEST(Buffer, create_write_read_float4)
         for(int w = 0; w < 256; ++w)
         {
             uchar4 p = b.Pixel(w, h);
-            EXPECT_EQ(p.r, (char)w);
-            EXPECT_EQ(p.g, (char)h);
-            EXPECT_EQ(p.b, (char)0);
-            EXPECT_EQ(p.a, (char)255);
+            EXPECT_EQ(p.r, (unsigned char)w);
+            EXPECT_EQ(p.g, (unsigned char)h);
+            EXPECT_EQ(p.b, (unsigned char)0);
+            EXPECT_EQ(p.a, (unsigned char)255);
         }
     }
+}
+
+TEST(Buffer, write_to_ppm)
+{
+    rt::Buffer b(256, 256);
+    b.mGamma = 1.0f;
+
+    for(int h = 0; h < 256; ++h)
+    {
+        for(int w = 0; w < 256; ++w)
+        {
+            b.SetPixel(w, h, float4(
+                (float)w / (float)255,
+                (float)h / (float)255,
+                0.0f,
+                10.0f
+            ));
+        }
+    }
+
+    b.ToPPM("file.ppm");
 }

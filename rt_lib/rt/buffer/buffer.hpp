@@ -46,5 +46,7 @@ namespace rt
 			int flipy = mSizey - 1 - y;
 			return mData[x + mSizex * flipy];
 		}
+
+		void ToPPM(const char* path);
 	};
 }
