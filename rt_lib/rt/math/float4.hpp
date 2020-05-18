@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cmath>
-#include "nmmintrin.h" // for SSE4.2
-#include "immintrin.h" // for AVX 
+#include <nmmintrin.h>
+#include <immintrin.h>
+#include <xmmintrin.h>
 
 class alignas(16) float4
 {
@@ -26,30 +27,23 @@ public:
     /**
      * 4-element float class
      */
-    float4()
-    {
+    float4() { }
 
-    }
+    /**
+     * Single element constructor, equivalant to
+     * float4(x, x, x, x)
+     */
+    float4(float x) : x(x), y(x), z(x), w(x) {}
 
     /**
      * 4-element float class, created with SSE data
      */
-    float4(__m128 sseData) : sseData(sseData)
-    {
-
-    }
+    float4(__m128 sseData) : sseData(sseData) { }
 
     /**
      * 4-element float class, created with individial elements
      */
-    float4(float x, float y, float z, float w) :
-        x(x),
-        y(y),
-        z(z),
-        w(w)
-    {
-
-    }
+    float4(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) { }
 
     /**
      * 4-element float class
@@ -116,6 +110,13 @@ inline float4 operator*(const float4& lhs, const float rhs)
 inline float4 operator/(const float4& lhs, const float4& rhs)
 {
     return float4(_mm_div_ps(lhs.sseData, rhs.sseData));
+}
+
+inline bool operator==(const float4& lhs, const float4& rhs)
+{
+    __m128 xorf = _mm_xor_ps(lhs.sseData, rhs.sseData);
+    __m128i* xori = (__m128i*)&xorf;
+    return _mm_test_all_zeros(*xori, *xori);
 }
 
 inline float4 pow(const float4& lhs, float rhs)

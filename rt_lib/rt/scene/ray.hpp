@@ -1,52 +1,45 @@
 #pragma once
 
-#include <xmmintrin.h>
+#include <rt/math/float4.hpp>
 
 namespace rt
 {
-    class alignas(32) Ray
+    class ray
     {
     public:
-        alignas(32) __m256 mSSEDualOrigin;
-        alignas(32) __m256 mSSEDualInvDir;
-        
-        alignas(16) __m128 mSSEDirection;
-        alignas(16) __m128 mSSEOrigin;
-        alignas(16) __m128 mSSEInvDir;
+        float4 mDirection;
+        float4 mOrigin;
+        float4 mInvDir;
 
-        
+        ray() { }     
 
-        Ray(const glm::vec3& o, const glm::vec3& d)
-        {
-            setOrigin(_mm_set_ps(0.0f, o.z, o.y, o.x));
-            setDirection(_mm_set_ps(1.0f, d.z, d.y, d.x));
-        }
-
-        Ray(const __m128& o, const __m128& d)
+        ray(const float4& o, const float4& d)
         {
             setOrigin(o);
             setDirection(d);
         }
 
-        void setOrigin(const __m128& o)
+        ray(const __m128& o, const __m128& d)
         {
-            mSSEOrigin = o;
-            mSSEDualOrigin = _mm256_insertf128_ps(mSSEDualOrigin, mSSEOrigin, 0);
-            mSSEDualOrigin = _mm256_insertf128_ps(mSSEDualOrigin, mSSEOrigin, 1);
+            setOrigin(float4(o));
+            setDirection(float4(d));
         }
 
-        void setDirection(const __m128& d)
+        void setOrigin(const float4& o)
         {
-
-            mSSEDirection = d;
-            mSSEInvDir = _mm_div_ps(_mm_set1_ps(1.0f), mSSEDirection);
-            mSSEDualInvDir = _mm256_insertf128_ps(mSSEDualInvDir, mSSEInvDir, 0);
-            mSSEDualInvDir = _mm256_insertf128_ps(mSSEDualInvDir, mSSEInvDir, 1);
+            mOrigin = o;
         }
 
-        glm::vec3 direction() const
+        void setDirection(const float4& d)
         {
-            return glm::vec3(mSSEDirection[0], mSSEDirection[1], mSSEDirection[2]);
+
+            mDirection = d;
+            mInvDir = float4(1.0f) /  mDirection;
+        }
+
+        const float4& direction() const
+        {
+            return mDirection;
         }
     };
 

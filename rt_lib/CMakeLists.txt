@@ -12,6 +12,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mavx -mavx2 -mfma")
 
 add_library(rt SHARED
     rt/math/float4.hpp
+    
+    rt/scene/ray.hpp
+
     rt/buffer/buffer.cpp
 )
 add_dependencies(rt assimp)

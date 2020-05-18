@@ -7,6 +7,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -msse4.2 -mavx -mavx2 -mfma")
 
 add_executable(rt_lib_tests 
     math/float4.cpp
+
+    scene/ray.cpp
+
     buffer/buffer.cpp
 )
 

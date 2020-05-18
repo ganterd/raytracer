@@ -6,7 +6,7 @@
  * Assert that a float4 is 4 * 32 bits (important because we're
  * using SSE _mm128 and we don't want the union to be > 128b)
  */
-TEST(float4, Footprint)
+TEST(float4, footprint)
 {
     ASSERT_EQ(sizeof(float4), sizeof(float) * 4);
 }
@@ -14,7 +14,7 @@ TEST(float4, Footprint)
 /**
  * Test that a float4 can be assigned through constructor
  */
-TEST(float4, Constructor)
+TEST(float4, constructor)
 {
     float4 a(0.0f, 1.0f, 2.0f, 3.0f);
 
@@ -24,7 +24,7 @@ TEST(float4, Constructor)
     }
 }
 
-TEST(float4, SSELoad)
+TEST(float4, constructor_sse)
 {
     __m128 d = _mm_set_ps(4, 3, 2, 1);
     float4 a(d);
@@ -38,7 +38,7 @@ TEST(float4, SSELoad)
 /**
  * Test that a float4 can be accessed correctly through rgba
  */
-TEST(float4, AccessRGBA)
+TEST(float4, access_rgba)
 {
     float4 a(0.0f, 1.0f, 2.0f, 3.0f);
 
@@ -51,7 +51,7 @@ TEST(float4, AccessRGBA)
 /**
  * Test that a float4 can be updated and values remain
  */
-TEST(float4, AccessIndex)
+TEST(float4, access_index)
 {
     float4 a;
     a[0] = 0.0f;
@@ -68,7 +68,7 @@ TEST(float4, AccessIndex)
 /**
  * Test that two float4 can be added
  */
-TEST(float4, Add)
+TEST(float4, add)
 {
     float4 a(1.0f, 2.0f, 3.0f, 4.0f);
     float4 b(5.0f, 6.0f, 7.0f, 8.0f);
@@ -83,7 +83,7 @@ TEST(float4, Add)
 /**
  * Test that a float4 can be added to with another float4
  */
-TEST(float4, AddUnaryByIndex)
+TEST(float4, add_unary_by_index)
 {
     float4 a(1.0f, 2.0f, 3.0f, 4.0f);
     a[0] += 5.0f;
@@ -100,7 +100,7 @@ TEST(float4, AddUnaryByIndex)
 /**
  * Test that a float4 can be added to with another float4
  */
-TEST(float4, AddUnary)
+TEST(float4, add_unary)
 {
     float4 a(1.0f, 2.0f, 3.0f, 4.0f);
     float4 b(5.0f, 6.0f, 7.0f, 8.0f);
@@ -115,7 +115,7 @@ TEST(float4, AddUnary)
 /**
  * Test that two float4 can be subtracted
  */
-TEST(float4, Sub)
+TEST(float4, sub)
 {
     float4 a(1.0f, 2.0f, 3.0f, 4.0f);
     float4 b(5.0f, 6.0f, 7.0f, 8.0f);
@@ -130,7 +130,7 @@ TEST(float4, Sub)
 /**
  * Test that two float4 can be subtracted
  */
-TEST(float4, SubUnary)
+TEST(float4, sub_unary)
 {
     float4 a(1.0f, 2.0f, 3.0f, 4.0f);
     float4 b(5.0f, 6.0f, 7.0f, 8.0f);
@@ -203,7 +203,7 @@ TEST(float4, mul_unary_float)
 /**
  * Test that two float4 can be divided
  */
-TEST(float4, Div)
+TEST(float4, div)
 {
     float4 a(10.0f, 18.0f, 28.0f, 40.0f);
     float4 b(5.0f, 6.0f, 7.0f, 8.0f);
@@ -218,7 +218,7 @@ TEST(float4, Div)
 /**
  * Test that one float4 can be divided by another
  */
-TEST(float4, DivUnary)
+TEST(float4, div_unary)
 {
     float4 a(10.0f, 18.0f, 28.0f, 40.0f);
     float4 b(5.0f, 6.0f, 7.0f, 8.0f);
@@ -230,7 +230,7 @@ TEST(float4, DivUnary)
     EXPECT_EQ(a.w, 5.0f);
 }
 
-TEST(float4, Power)
+TEST(float4, pow)
 {
     float4 a(1, 2, 3, 4);
 
@@ -242,7 +242,7 @@ TEST(float4, Power)
     EXPECT_EQ(a.w, 16.0f);
 }
 
-TEST(float4, Clamp)
+TEST(float4, clamp)
 {
     float4 a(-1, 0, 0.5, 3);
     a = clamp(a, 0, 1);
@@ -252,3 +252,20 @@ TEST(float4, Clamp)
     EXPECT_EQ(a.z, 0.5f);
     EXPECT_EQ(a.w, 1.0f);
 }
+
+TEST(float4, equals)
+{
+    float4 a(1, 2, 3, 4);
+    float4 b(1, 2, 3, 4);
+
+    EXPECT_TRUE(a == b);
+}
+
+TEST(float4, not_equals)
+{
+    float4 a(1, 2, 3, 4);
+    float4 b(1, 2, 3, 5);
+
+    EXPECT_FALSE(a == b);
+}
+

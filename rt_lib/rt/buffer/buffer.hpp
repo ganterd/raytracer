@@ -13,30 +13,24 @@ namespace rt
 		int mSizex;
 		int mSizey;
 		float4* mData;
-		std::mutex* mThreadLocks;
-		int mNumThreadLocks;
 		float mGamma;
 
-		Buffer(int x, int y, int threads = 1)
+		Buffer(int x, int y)
 		{
 			mGamma = 2.2f;
 			mData = new float4[x * y];
 			mSizex = x;
 			mSizey = y;
-			mNumThreadLocks = threads;
-			mThreadLocks = new std::mutex[threads];
 		}
 
 		~Buffer()
 		{
 			delete[] mData;
-			delete[] mThreadLocks;
 		}
 
 		inline float4& Pixel(int x, int y)
 		{
-			int flipy = mSizey - 1 - y;
-			return mData[x + mSizex * flipy];
+			return mData[x + mSizex * y];
 		}
 
 		void ToPPM(const char* path, float gamma = 2.2f);
