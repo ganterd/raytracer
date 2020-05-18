@@ -269,3 +269,80 @@ TEST(float4, not_equals)
     EXPECT_FALSE(a == b);
 }
 
+TEST(float4, cross_xy)
+{
+    float4 a(1, 0, 0, 0);
+    float4 b(0, 1, 0, 0);
+
+    float4 c = cross(a, b);
+
+    float4 expected = float4(0, 0, 1, 0);
+    EXPECT_EQ(c, expected);
+}
+
+TEST(float4, cross_yz)
+{
+    float4 a(0, 1, 0, 0);
+    float4 b(0, 0, 1, 0);
+
+    float4 c = cross(a, b);
+
+    float4 expected = float4(1, 0, 0, 0);
+    EXPECT_EQ(c, expected);
+}
+
+TEST(float4, cross_xz)
+{
+    float4 a(1, 0, 0, 0);
+    float4 b(0, 0, 1, 0);
+
+    float4 c = cross(a, b);
+
+    float4 expected = float4(0, -1, 0, 0);
+    EXPECT_EQ(c, expected);
+}
+
+TEST(float4, length_x)
+{
+    float4 a(10, 0, 0, 0);
+
+    float l = length(a);
+
+    EXPECT_EQ(l, 10.0f);
+}
+
+TEST(float4, length_xy)
+{
+    float4 a(10, 10, 0, 0);
+
+    float l = length(a);
+
+    EXPECT_EQ(l, 10.0f * sqrtf(2.0f));
+}
+
+TEST(float4, length_xz)
+{
+    float4 a(10, 0, 10, 0);
+
+    float l = length(a);
+
+    EXPECT_EQ(l, 10.0f * sqrtf(2.0f));
+}
+
+TEST(float4, length_x_negz)
+{
+    float4 a(10, 0, -10, 0);
+
+    float l = length(a);
+
+    EXPECT_EQ(l, 10.0f * sqrtf(2.0f));
+}
+
+TEST(float4, normalize)
+{
+    float4 a(10, 0, 0, 0);
+
+    float4 b = normalize(a);
+
+    EXPECT_EQ(b, float4(1, 0, 0, 0));
+}

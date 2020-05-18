@@ -138,3 +138,29 @@ inline float4 clamp(const float4& lhs, float _min, float _max)
         std::min(std::max(lhs.w, _min), _max)
     );
 }
+
+inline float4 cross(const float4& a, const float4& b) 
+{
+    __m128 l = _mm_shuffle_ps(a.sseData, a.sseData, _MM_SHUFFLE(3, 0, 2, 1));
+    __m128 r = _mm_shuffle_ps(b.sseData, b.sseData, _MM_SHUFFLE(3, 1, 0, 2));
+    __m128 lmul = _mm_mul_ps(l, r);
+    l = _mm_shuffle_ps(a.sseData, a.sseData, _MM_SHUFFLE(3, 1, 0, 2));
+    r = _mm_shuffle_ps(b.sseData, b.sseData, _MM_SHUFFLE(3, 0, 2, 1));
+    __m128 rmul = _mm_mul_ps(l, r);
+    __m128 cross = _mm_sub_ps(lmul, rmul);
+    return float4(cross);
+}
+
+inline float length(const float4& a)
+{
+    __m128 sq = _mm_mul_ps(a.sseData, a.sseData);
+    __m128 sq_sum = _mm_hadd_ps(sq, sq);
+    float sum = sq_sum[0] + sq_sum[1];
+    return sqrtf32(sum);
+}
+
+inline float4 normalize(const float4& a)
+{
+    float4 l(length(a));
+    return a / l;
+}
