@@ -9,6 +9,7 @@ add_executable(rt_lib_tests
     math/float4.cpp
 
     scene/ray.cpp
+    scene/tri.cpp
 
     buffer/buffer.cpp
 )

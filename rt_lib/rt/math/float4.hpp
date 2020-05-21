@@ -151,6 +151,18 @@ inline float4 cross(const float4& a, const float4& b)
     return float4(cross);
 }
 
+inline float dot(const float4& a, const float4& b)
+{
+    __m128 mulRes, shufReg, sumsReg;
+    mulRes = _mm_mul_ps(a.sseData, b.sseData);
+
+    shufReg = _mm_movehdup_ps(mulRes);
+    sumsReg = _mm_add_ps(mulRes, shufReg);
+    shufReg = _mm_movehl_ps(shufReg, sumsReg);
+    sumsReg = _mm_add_ss(sumsReg, shufReg);
+    return  _mm_cvtss_f32(sumsReg);
+}
+
 inline float length(const float4& a)
 {
     __m128 sq = _mm_mul_ps(a.sseData, a.sseData);

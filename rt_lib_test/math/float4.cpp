@@ -1,6 +1,7 @@
 
 #include "gtest/gtest.h"
 #include <rt/math/float4.hpp>
+#include <rt/utils/formatters.hpp>
 
 /**
  * Assert that a float4 is 4 * 32 bits (important because we're
@@ -300,6 +301,49 @@ TEST(float4, cross_xz)
 
     float4 expected = float4(0, -1, 0, 0);
     EXPECT_EQ(c, expected);
+}
+
+TEST(float4, dot_perpendicular)
+{
+    float4 a(1.0f, 0.0f, 0.0f, 0.0f);
+    float4 b(0.0f, 1.0f, 0.0f, 0.0f);
+    float expected = 0.0f;
+
+    float actual = dot(a, b);
+    EXPECT_FLOAT_EQ(actual, expected);
+}
+
+TEST(float4, dot_aligned)
+{
+    float4 a(1.0f, 0.0f, 0.0f, 0.0f);
+    float4 b(1.0f, 0.0f, 0.0f, 0.0f);
+    float expected = 1.0f;
+
+    float actual = dot(a, b);
+    EXPECT_FLOAT_EQ(actual, expected);
+}
+
+
+TEST(float4, dot_halfway)
+{
+    float4 a(1.0f, 0.0f, 0.0f, 0.0f);
+    float4 b(0.5f, 0.5f, 0.0f, 0.0f);
+    b = normalize(b);
+    float expected = 1.0f / sqrtf(2.0f);
+
+    float actual = dot(a, b);
+    EXPECT_FLOAT_EQ(actual, expected);
+}
+
+
+TEST(float4, dot_mismatch_homogenous)
+{
+    float4 a(1.0f, 0.0f, 0.0f, 1.0f);
+    float4 b(0.0f, 1.0f, 0.0f, 0.0f);
+    float expected = 0.0f;
+
+    float actual = dot(a, b);
+    EXPECT_FLOAT_EQ(actual, expected);
 }
 
 TEST(float4, length_x)

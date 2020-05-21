@@ -1,6 +1,7 @@
 #pragma once
+
 #include <rt/scene/ray.hpp>
-#include <rt/scene/aabb.hpp>
+#include <rt/scene/rayhit.hpp>
 
 namespace rt
 {
@@ -11,13 +12,9 @@ namespace rt
 		float4 sp0;
 		float4 sp1;
 
-		//float4 tx;
-		//float4 ty;
-		//float4 tz;
-
-		float4 mOrigin;
-		float4 mEdge1;
-		float4 mEdge2;
+		float4 tx;
+		float4 ty;
+		float4 tz;
 
 		float4 v0, n0, n1, n2, edge1, edge2;
 		float4 centroid;
@@ -97,38 +94,44 @@ namespace rt
 		rt::hit intersect(const rt::ray& r)
 		{
 			const float e = 0.000001f;
-			const __m128 tvec = r.mOrigin - mOrigin;
-			const __m128 pvec = cross(r.mDirection, mEdge2); 
-			const __m128 qvec = cross(tvec, mEdge1);
-
+			const float4 tvec = r.mOrigin - centroid;
+			const float4 pvec = cross(r.mDirection, edge2); 
+			const float4 qvec = cross(tvec, edge1);
 			float det, inv_det;
 
-			det = _mm_dp_ps(mSSEEdge1, pvec, 0x7f)[0];
+
+            rt::hit out;
+
+            det = dot(edge1, pvec);
+			//det = _mm_dp_ps(mEdge1.sseData, pvec.sseData, 0x7f)[0];
 
 			if(det > -e && det < e)
-				return false;
+				return out;
 			inv_det = 1.0f / det;
 			
-			float u = _mm_dp_ps(tvec, pvec, 0x7f)[0] * inv_det;
+            //float u = _mm_dp_ps(tvec.sseData, pvec.sseData, 0x7f)[0] * inv_det;
+            float u = dot(tvec, pvec) * inv_det;
 			if(u < 0.0f || u > 1.0f)
-				return false;
+				return out;
 
-			float v = _mm_dp_ps(r->mSSEDirection, qvec, 0x7f)[0] * inv_det;
+			//float v = _mm_dp_ps(r->mSSEDirection, qvec.sseData, 0x7f)[0] * inv_det;
+            float v = dot(r.mDirection, qvec) * inv_det;
 			if(v < 0.0f || (u + v > 1.0f))
-				return false;
+				return out;
 
-			float d = _mm_dp_ps(mSSEEdge2, qvec, 0x7f)[0] * inv_det;
+			//float d = _mm_dp_ps(mEdge2.sseData, qvec.sseData, 0x7f)[0] * inv_det;
+            float d = dot(edge2, qvec) * inv_det;
 			if(d < e)
-				return false;
+				return out;
 
-			out.mDistance = d;
 
-			__m128 SSEd = _mm_set1_ps(d);
-			__m128 hit = _mm_fmadd_ps(r->mSSEDirection, SSEd, r->mSSEOrigin);
-			out.mHitPosition = glm::vec3(hit[0], hit[1], hit[2]);
-			out.mSurfaceNormal = surfaceNormal;
-			out.mTri = this;
-			return true;
+			float4 hit = r.mDirection * float4(d) + r.mOrigin;
+		    out.intersected = true;	
+			out.position = float4(hit[0], hit[1], hit[2], 0.0f);
+			out.normal = surfaceNormal;
+			//out.tri = this;
+			out.distance = d;
+			return out;
 		}
 
 		float4 interpolatedNormal(const float4&)
