@@ -390,3 +390,23 @@ TEST(float4, normalize)
 
     EXPECT_EQ(b, float4(1, 0, 0, 0));
 }
+
+TEST(float4, min)
+{
+    float4 a(1, 2, 3, 4);
+    float4 b(2, 4, 1, 2);
+    
+    float4 expected(1, 2, 1, 2);
+    float4 actual = min(a, b);
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(float4, max)
+{
+    float4 a(1, 2, 3, 4);
+    float4 b(2, 4, 1, 2);
+    
+    float4 expected(2, 4, 3, 4);
+    float4 actual = max(a, b);
+    EXPECT_EQ(actual, expected);
+}

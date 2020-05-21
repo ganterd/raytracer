@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <nmmintrin.h>
 #include <immintrin.h>
@@ -137,6 +138,16 @@ inline float4 clamp(const float4& lhs, float _min, float _max)
         std::min(std::max(lhs.z, _min), _max),
         std::min(std::max(lhs.w, _min), _max)
     );
+}
+
+inline float4 min(const float4& a, const float4& b)
+{
+    return float4(_mm_min_ps(a.sseData, b.sseData));
+}
+
+inline float4 max(const float4& a, const float4& b)
+{
+    return float4(_mm_max_ps(a.sseData, b.sseData));
 }
 
 inline float4 cross(const float4& a, const float4& b) 

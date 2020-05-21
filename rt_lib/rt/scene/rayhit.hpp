@@ -1,5 +1,7 @@
 #pragma once
 
+#include <rt/math/float4.hpp>
+
 namespace rt
 {
     class hit
