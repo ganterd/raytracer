@@ -172,7 +172,6 @@ TEST(mat4x4f, rotate_xy)
     mat4x4f my = mat4x4f::rotation(float4(0.0f, ry, 0.0f, 0.0f));
     float4 v(1.0f, 0.0f, 0.0f, 0.0f);
 
-    //v = mx * my * v;
     v = v * my * mx;
 
     float4 expected(0.0f, 0.707107f, -0.707107f, 0.0f);

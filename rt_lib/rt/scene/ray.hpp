@@ -11,7 +11,7 @@ namespace rt
         float4 mOrigin;
         float4 mInvDir;
 
-        ray() { }     
+        ray() { }
 
         ray(const float4& o, const float4& d)
         {
