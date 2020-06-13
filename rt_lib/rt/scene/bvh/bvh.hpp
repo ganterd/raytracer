@@ -10,21 +10,21 @@
 
 namespace rt
 {
-    class BVHBestSplit
+    class bvh_best_split
     {
     public:
         int axis;
         int splitIndex;
         float cost;
         
-        rt::AABB AABBLeft;
-        rt::AABB AABBRight;
-        rt::AABB centroidAABB_L;
-        rt::AABB centroidAABB_R;
+        rt::aabb AABBLeft;
+        rt::aabb AABBRight;
+        rt::aabb centroidAABB_L;
+        rt::aabb centroidAABB_R;
         int numPrimitives_L;
         int numPrimitives_R;
 
-        BVHBestSplit()
+        bvh_best_split()
         {
             cost = std::numeric_limits<float>::max();
         }
@@ -34,60 +34,59 @@ namespace rt
      * Construction method is an implementation of Wald 2007 - "On fast construction 
      * of SAH-based bounding volume hierarchies", just not as efficient...
      */
-    class BVH
+    class bvh
     {
     public:
-        struct Bin
+        struct bin
         {
-            std::vector<Tri*> mTris;
-            rt::AABB mAABB;
-            rt::AABB mCentroidsAABB;
+            std::vector<rt::tri*> mTris;
+            rt::aabb mAABB;
+            rt::aabb mCentroidsAABB;
 
             // Centroid bounds
             float mLeft;
             float mRight;
 
-            Bin()
+            bin()
             {
-                mAABB = rt::AABB::infinity();
-                mCentroidsAABB = rt::AABB::infinity();
+                mAABB = rt::aabb::infinity();
+                mCentroidsAABB = rt::aabb::infinity();
             }
         };
 
         int mNumBins;
-        BVHNode* mRoot;
-        rt::Scene* mTargetScene;
+        rt::bvh_node *mRoot;
+        rt::scene* mTargetScene;
 
-        BVH();
-        ~BVH();
+        bvh();
+        ~bvh();
 
-        void construct(rt::Scene* scene);
+        void construct(rt::scene* scene);
 
-        bool cast(rt::Ray* r, rt::RayHit& hit);
-        bool castDual(rt::BVHNode* n, rt::Ray* ray, rt::RayHit& hit);
-
-        bool occluded(rt::Ray* ray, const float distance);
-        bool occludedDual(BVHNode* n, rt::Ray* ray, const float distance);
+        rt::hit cast(const rt::ray &r);
+        //bool occluded(rt::ray* ray, const float distance);
 
     private:
-        rt::BVH::Bin** mBins;
+        rt::bvh::bin** mBins;
         void createBins();
         void freeBins();
         int deepestLevel;
         int numSplitNodes;
         int numLeafNodes;
 
-        rt::AABB** totalAABBRight;
-        rt::AABB** totalCentroidAABBRight;
+        rt::aabb** totalAABBRight;
+        rt::aabb** totalCentroidAABBRight;
         int** totalPrimitivesRight;
 
-        BVHNode* mAllocatedNodes;
+        bvh_node* mAllocatedNodes;
         size_t mCurrentlyAllocatedNodes;
 
-        rt::BVHNode* recursiveConstruct(Tri** tris, int numTris, const AABB& centroidAABB, int level);
+        rt::bvh_node* recursiveConstruct(rt::tri** tris, int numTris, const aabb& centroidAABB, int level);
 
-        BVHNode* newNode();
-        rt::BVHBestSplit findBestSplit();
+        bvh_node* newNode();
+        rt::bvh_best_split findBestSplit();
+
+        void cast(rt::bvh_node *n, const rt::ray &r, rt::hit &hit);
     };
 
     

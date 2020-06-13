@@ -29,6 +29,22 @@
         },
         {
             "type": "shell",
+            "label": "CMake (Release)",
+            "dependsOn": [
+                "mkdirs"
+            ],
+            "command": "cmake",
+            "args": [
+                "${workspaceFolder}",
+                "-DCMAKE_BUILD_TYPE=Release"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/build/release"
+            },
+            "group": "build"
+        },
+        {
+            "type": "shell",
             "label": "Build Path Tracer Tests (Debug)",
             "dependsOn": [
                 "CMake (Debug)"
@@ -59,6 +75,25 @@
 			],
 			"options": {
 				"cwd": "${workspaceFolder}/build/debug"
+			},
+			"group": "build",
+			"problemMatcher": [
+				"$gcc"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "Build PPM Path Tracer (Release)",
+			"dependsOn": [
+				"CMake (Release)"
+			],
+			"command": "make",
+			"args": [
+				"pt_app_minimal_ppm",
+				"-j4"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/release"
 			},
 			"group": "build",
 			"problemMatcher": [

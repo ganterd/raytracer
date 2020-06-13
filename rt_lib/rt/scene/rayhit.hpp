@@ -10,7 +10,7 @@ namespace rt
         bool intersected;
         float4 position;
         float4 normal;
-        float distance;
+        float distance = std::numeric_limits<float>::infinity();
 
         hit() : intersected(false) {};
     };

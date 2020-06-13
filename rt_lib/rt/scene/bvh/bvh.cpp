@@ -1,20 +1,20 @@
 #include <rt/scene/bvh/bvh.hpp>
 
-rt::BVH::BVH()
+rt::bvh::bvh()
 {
     mNumBins = 1024;
     mRoot = nullptr;
     mTargetScene = nullptr;
 }
 
-rt::BVH::~BVH()
+rt::bvh::~bvh()
 {
 
 }
 
-void rt::BVH::construct(rt::Scene* scene)
+void rt::bvh::construct(rt::scene* scene)
 {
-    Tri** tris = new Tri*[scene->m_TotalTris];
+    rt::tri** tris = new rt::tri*[scene->m_TotalTris];
     for(unsigned int i = 0; i < scene->m_TotalTris; ++i)
     {
         tris[i] = &scene->m_Tris[i];
@@ -22,8 +22,8 @@ void rt::BVH::construct(rt::Scene* scene)
 
     mCurrentlyAllocatedNodes = 0;
     //mAllocatedNodes = new rt::BVHNode[scene->m_Tris.size() * 2 - 1];
-    size_t allocationSize = (scene->m_TotalTris * 2 - 1) * sizeof(rt::BVHNode) + sizeof(rt::BVHNode);
-    mAllocatedNodes = (rt::BVHNode*)_mm_malloc(allocationSize, 32);
+    size_t allocationSize = (scene->m_TotalTris * 2 - 1) * sizeof(rt::bvh_node) + sizeof(rt::bvh_node);
+    mAllocatedNodes = (rt::bvh_node*)_mm_malloc(allocationSize, 32);
 
     deepestLevel = 0;
     numSplitNodes = 0;
@@ -32,14 +32,13 @@ void rt::BVH::construct(rt::Scene* scene)
     std::cout << "Building BVH..." << std::endl;
 
     createBins();
-    rt::Timer constructionTimer;
+    rt::timer constructionTimer;
     constructionTimer.start();
     mRoot = recursiveConstruct(tris, scene->m_TotalTris, scene->mCentroidsAABB, 0);
     constructionTimer.stop();
     freeBins();
 
-    std::cout << "BVH Complete:" << std::endl;
-    std::cout << "|- Time: " << constructionTimer.getTime() << "s" << std::endl;
+    std::cout << "BVH Complete " << constructionTimer.getTime() << "s):" << std::endl;
     std::cout << "|- Deepest Level: " << deepestLevel << std::endl;
     std::cout << "|- Split Nodes: " << numSplitNodes << std::endl;
     std::cout << "|- Leaf Nodes: " << numLeafNodes << std::endl;
@@ -48,28 +47,28 @@ void rt::BVH::construct(rt::Scene* scene)
     mTargetScene = scene;
 }
 
-rt::BVHNode* rt::BVH::newNode()
+rt::bvh_node* rt::bvh::newNode()
 {
     return &mAllocatedNodes[mCurrentlyAllocatedNodes++];
 }
 
-void rt::BVH::createBins()
+void rt::bvh::createBins()
 {
-    mBins = new rt::BVH::Bin*[3];
-    totalAABBRight = new rt::AABB*[3];
-    totalCentroidAABBRight = new rt::AABB*[3];
+    mBins = new rt::bvh::bin*[3];
+    totalAABBRight = new rt::aabb*[3];
+    totalCentroidAABBRight = new rt::aabb*[3];
     totalPrimitivesRight = new int*[3];
 
     for(int axis = 0; axis < 3; ++axis)
     {
-        mBins[axis] = new rt::BVH::Bin[mNumBins];
-        totalAABBRight[axis] = new rt::AABB[mNumBins];
-        totalCentroidAABBRight[axis] = new rt::AABB[mNumBins];
+        mBins[axis] = new rt::bvh::bin[mNumBins];
+        totalAABBRight[axis] = new rt::aabb[mNumBins];
+        totalCentroidAABBRight[axis] = new rt::aabb[mNumBins];
         totalPrimitivesRight[axis] = new int[mNumBins];
     }
 }
 
-void rt::BVH::freeBins()
+void rt::bvh::freeBins()
 {
     for(int axis = 0; axis < 3; ++axis)
     {
@@ -85,20 +84,29 @@ void rt::BVH::freeBins()
     delete[] totalPrimitivesRight;
 }
 
-rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& centroidAABB, int level)
+rt::bvh_node* rt::bvh::recursiveConstruct(
+    rt::tri** tris,
+    int numTris,
+    const rt::aabb& centroidAABB,
+    int level)
 {
     if(level > deepestLevel)
-        deepestLevel = level;
-
-    if(numTris <= BVHNode::mMaxTris)
     {
-        BVHNode* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
+        deepestLevel = level;
+    }
+
+    if(numTris <= bvh_node::mMaxTris)
+    {
+        rt::bvh_node* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
         n->mIsLeaf = true;
         n->mNumTris = 0;
         for(int i = 0; i < numTris; ++i)
         {
             n->mTris[(size_t)n->mNumTris++] = tris[i];
-            n->mAABB.grow(tris[i]->aabb);
+
+            n->mAABB.grow(tris[i]->v0);
+            n->mAABB.grow(tris[i]->v1);
+            n->mAABB.grow(tris[i]->v2);
         }
         numLeafNodes++;
         delete[] tris;
@@ -106,7 +114,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     }
 
 
-    glm::vec3 aabbSize = centroidAABB.mSize;
+    float4 aabbSize = centroidAABB.bsize;
 
     // Initialise the bins
     for(int axis = 0; axis < 3; ++axis)
@@ -116,34 +124,36 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
         {
             mBins[axis][b].mTris.clear();
             mBins[axis][b].mTris.reserve(numTris / mNumBins);
-            mBins[axis][b].mLeft = centroidAABB.mMax[axis] + (float)b * sizePerBin;
+            mBins[axis][b].mLeft = centroidAABB.bmax[axis] + (float)b * sizePerBin;
             mBins[axis][b].mRight = mBins[axis][b].mLeft + sizePerBin;
-            mBins[axis][b].mAABB = rt::AABB::infinity();
-            mBins[axis][b].mCentroidsAABB = rt::AABB::infinity();
+            mBins[axis][b].mAABB = rt::aabb::infinity();
+            mBins[axis][b].mCentroidsAABB = rt::aabb::infinity();
         }
     }
 
     // Bin all primitives to all 3 axis bins in one pass
     for(int t = 0; t < numTris; ++t)
     {
-        Tri* tri = tris[t];
+        rt::tri *tri = tris[t];
         for(int axis = 0; axis < 3; ++axis)
         {
             int axisBin = 0;
             if(aabbSize[axis] > 0.0f)
-                axisBin = (float)mNumBins * (( 0.9999f * (tri->centroid[axis] - centroidAABB.mMin[axis])) / aabbSize[axis]);
+                axisBin = (float)mNumBins * (( 0.9999f * (tri->centroid[axis] - centroidAABB.bmin[axis])) / aabbSize[axis]);
             mBins[axis][axisBin].mTris.push_back(tri);
-            mBins[axis][axisBin].mAABB.grow(tri->aabb);
+            mBins[axis][axisBin].mAABB.grow(tri->v0);
+            mBins[axis][axisBin].mAABB.grow(tri->v1);
+            mBins[axis][axisBin].mAABB.grow(tri->v2);
             mBins[axis][axisBin].mCentroidsAABB.grow(tri->centroid);
         }
     }
 
     // Find the best split
-    BVHBestSplit best = findBestSplit();
+    bvh_best_split best = findBestSplit();
 
     // Gather tris from left and right splits
-    Tri** trisLeft = new Tri*[best.numPrimitives_L];
-    Tri** trisRight = new Tri*[best.numPrimitives_R];
+    rt::tri **trisLeft = new rt::tri*[best.numPrimitives_L];
+    rt::tri **trisRight = new rt::tri*[best.numPrimitives_R];
 
     int j = 0;
     for(int i = 0; i <= best.splitIndex; ++i)
@@ -166,7 +176,7 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     // Delete the incoming array (save space when recursing)
     delete[] tris;
 
-    BVHNode* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
+    bvh_node* n = &mAllocatedNodes[mCurrentlyAllocatedNodes++];
     n->mIsLeaf = false;
     n->AssignLeft(recursiveConstruct(trisLeft, best.numPrimitives_L, best.centroidAABB_L, level + 1));
     n->AssignRight(recursiveConstruct(trisRight, best.numPrimitives_R, best.centroidAABB_R, level + 1));
@@ -174,19 +184,19 @@ rt::BVHNode* rt::BVH::recursiveConstruct(Tri** tris, int numTris, const AABB& ce
     return n;
 }
 
-rt::BVHBestSplit rt::BVH::findBestSplit()
+rt::bvh_best_split rt::bvh::findBestSplit()
 {
-    BVHBestSplit best;
+    bvh_best_split best;
 
     // Sweep from the right (on all axes) to generate the accumulated AABBs and costs
     
 
-    rt::AABB prevAABB[3];
-    rt::AABB prevCentroidAABB[3];
+    rt::aabb prevAABB[3];
+    rt::aabb prevCentroidAABB[3];
     int prevPrimitivesRight[3];
 
-    prevAABB[0] = prevAABB[1] = prevAABB[2] = rt::AABB::infinity();
-    prevCentroidAABB[0] = prevCentroidAABB[1] = prevCentroidAABB[2] = rt::AABB::infinity();
+    prevAABB[0] = prevAABB[1] = prevAABB[2] = rt::aabb::infinity();
+    prevCentroidAABB[0] = prevCentroidAABB[1] = prevCentroidAABB[2] = rt::aabb::infinity();
     prevPrimitivesRight[0] = prevPrimitivesRight[1] = prevPrimitivesRight[2] = 0;
 
     for(int b = mNumBins - 1; b >= 0; --b)
@@ -207,10 +217,10 @@ rt::BVHBestSplit rt::BVH::findBestSplit()
     // Sweep from left on all axes to find the best split
     int totalPrimitivesLeft[3];
     totalPrimitivesLeft[0] = totalPrimitivesLeft[1] = totalPrimitivesLeft[2] = 0;
-    rt::AABB totalAABBLeft[3];
-    totalAABBLeft[0] = totalAABBLeft[1] = totalAABBLeft[2] = rt::AABB::infinity();
-    rt::AABB totalCentroidAABBLeft[3];
-    totalCentroidAABBLeft[0] = totalCentroidAABBLeft[1] = totalCentroidAABBLeft[2] = rt::AABB::infinity();
+    rt::aabb totalAABBLeft[3];
+    totalAABBLeft[0] = totalAABBLeft[1] = totalAABBLeft[2] = rt::aabb::infinity();
+    rt::aabb totalCentroidAABBLeft[3];
+    totalCentroidAABBLeft[0] = totalCentroidAABBLeft[1] = totalCentroidAABBLeft[2] = rt::aabb::infinity();
 
     for(int ax = 0; ax < 3; ++ax)
     {
@@ -253,83 +263,78 @@ rt::BVHBestSplit rt::BVH::findBestSplit()
     return best;
 }
 
-bool rt::BVH::cast(rt::Ray* ray, rt::RayHit& hit)
+rt::hit rt::bvh::cast(const rt::ray &ray)
 {
-    //return cast(mRoot, ray, hit);
-    bool b = castDual(mRoot, ray, hit);
-    //std::cout << "Ray tested " << hit.mTrisTested << " tris" << std::endl;
-    return b;
+    rt::hit hit;
+    cast(mRoot, ray, hit);
+    return hit;
 }
 
-bool rt::BVH::castDual(rt::BVHNode* n, rt::Ray* ray, rt::RayHit& hit)
+void rt::bvh::cast(rt::bvh_node *n, const rt::ray &ray, rt::hit &hit)
 {
-        
-    if(n->mIsLeaf)
+    if(n == nullptr)
     {
-        bool hasHit = false;
-        for(int t = 0; t < n->mNumTris; ++t)
+        return;
+    }       
+
+
+    if(n->mAABB.intersect(ray))
+    {
+        if(n->mIsLeaf)
         {
-            RayHit currentHit;
-            ++hit.mTrisTested;
-            if(n->mTris[t]->rayIntersection(ray, currentHit))
+            bool hasHit = false;
+            for(int t = 0; t < n->mNumTris; ++t)
             {
-                hasHit = true;
-                if(currentHit.mDistance < hit.mDistance)
+                rt::hit currentHit = n->mTris[t]->intersect(ray);
+                if(currentHit.intersected)
                 {
-                    hit = currentHit;
+                    hasHit = true;
+                    if(currentHit.distance < hit.distance)
+                    {
+                        hit = currentHit;
+                    }
                 }
             }
         }
-        return hasHit;
-    }
-    else
-    {
-        // bool left, right;
-        // n->intersectBothChildren(ray, left, right);
-        // if(left) left = castDual(n->mLeft, ray, hit);
-        // if(right) right = castDual(n->mRight, ray, hit);
-        // return left | right;
-        if(n->mAABB.intersect(ray))
+        else
         {
-            bool left = castDual(n->mLeft, ray, hit);
-            bool right = castDual(n->mRight, ray, hit);
-            return left | right;
-        }
-        return false;
-    }
-}
-
-bool rt::BVH::occluded(rt::Ray* ray, const float distance)
-{
-    //return occluded(mRoot, ray, distance);
-    return occludedDual(mRoot, ray, distance);
-}
-
-bool rt::BVH::occludedDual(rt::BVHNode* n, rt::Ray* ray, const float distance)
-{
-    if(n->mIsLeaf)
-    {
-        for(int t = 0; t < n->mNumTris; ++t)
-        {
-            RayHit currentHit;
-            if(n->mTris[t]->rayIntersection(ray, currentHit))
-            {
-                if(currentHit.mDistance < distance)
-                    return true;
-            }
+            cast(n->mLeft, ray, hit);
+            cast(n->mRight, ray, hit);
         }
     }
-    else
-    {
-
-        bool left, right;
-        n->intersectBothChildren(ray, left, right);
-        if(left)
-            if(occludedDual(n->mLeft, ray, distance))
-                return true;
-        if(right)
-            if(occludedDual(n->mRight, ray, distance))
-                return true;
-    }
-	return false;
 }
+
+// bool rt::BVH::occluded(rt::Ray* ray, const float distance)
+// {
+//     //return occluded(mRoot, ray, distance);
+//     return occludedDual(mRoot, ray, distance);
+// }
+
+// bool rt::BVH::occludedDual(rt::BVHNode* n, rt::Ray* ray, const float distance)
+// {
+//     if(n->mIsLeaf)
+//     {
+//         for(int t = 0; t < n->mNumTris; ++t)
+//         {
+//             RayHit currentHit;
+//             if(n->mTris[t]->rayIntersection(ray, currentHit))
+//             {
+//                 if(currentHit.mDistance < distance)
+//                     return true;
+//             }
+//         }
+//     }
+//     else
+//     {
+
+//         bool left, right;
+//         n->intersectBothChildren(ray, left, right);
+//         if(left)
+//             if(occludedDual(n->mLeft, ray, distance))
+//                 return true;
+//         if(right)
+//             if(occludedDual(n->mRight, ray, distance))
+//                 return true;
+//     }
+// 	return false;
+// }

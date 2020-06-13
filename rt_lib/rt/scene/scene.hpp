@@ -9,31 +9,31 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-#include <rt/scene/lights/light.hpp>
-#include <rt/scene/lights/pointlight.hpp>
-#include <rt/scene/lights/arealight.hpp>
+//#include <rt/scene/lights/light.hpp>
+//#include <rt/scene/lights/pointlight.hpp>
+//#include <rt/scene/lights/arealight.hpp>
 #include <rt/scene/mesh/mesh.hpp>
-#include <rt/scene/mesh/tri.hpp>
+#include <rt/scene/tri.hpp>
 #include <rt/scene/camera.hpp>
 
 namespace rt
 {
-	class Scene
+	class scene
 	{
 	public:
 		const aiScene* assimpScene;
 
-		std::vector<Mesh*> m_Meshes;
+		std::vector<mesh*> m_Meshes;
 		//std::vector<Tri> m_Tris;
-		std::vector<Light*> mLights;
+		//std::vector<Light*> mLights;
 
-		AABB mGeometryAABB;
-		AABB mCentroidsAABB;
+		rt::aabb mGeometryAABB;
+		rt::aabb mCentroidsAABB;
 
-		Camera* mCamera;
+		rt::camera* mCamera;
 
 		size_t m_TotalTris;
-		rt::Tri* m_Tris;
+		rt::tri* m_Tris;
 		size_t m_AssignedTris;
 
 		bool fromFile(const std::string& file);
@@ -42,33 +42,29 @@ namespace rt
 		void NodeRecurse(aiNode* n, const aiMatrix4x4& m);
 		void ProcessMesh(aiMesh*, const aiMatrix4x4& m);
 		void ProcessCamera(aiCamera* c);
-		void ProcessLights();
+		//void ProcessLights();
 		
-		glm::mat4 AssimpToGLM(const aiMatrix4x4& from)
+		mat4x4f toNative(const aiMatrix4x4& from)
 		{
-			glm::mat4 to;
-			to[0][0] = from.a1; 
-			to[1][0] = from.a2;
-			to[2][0] = from.a3; 
-			to[3][0] = from.a4;
-			to[0][1] = from.b1; 
-			to[1][1] = from.b2;
-			to[2][1] = from.b3; 
-			to[3][1] = from.b4;
-			to[0][2] = from.c1; 
-			to[1][2] = from.c2;
-			to[2][2] = from.c3; 
-			to[3][2] = from.c4;
-			to[0][3] = from.d1; 
-			to[1][3] = from.d2;
-			to[2][3] = from.d3; 
-			to[3][3] = from.d4;
+			mat4x4f to;
+			for(int i = 0; i < 4; ++i)
+			{
+				to.rows[i].x = from[i][0];
+				to.rows[i].y = from[i][1];
+				to.rows[i].z = from[i][2];
+				to.rows[i].w = from[i][3];
+			}
 			return to;
 		}
 
-		glm::vec3 AssimpToGLM(const aiVector3D& from)
+		float4 toNativePoint(const aiVector3D& from)
 		{
-			return glm::vec3(from.x, from.y, from.z);
+			return float4(from.x, from.y, from.z, 1.0f);
+		}
+
+		float4 toNativeVector(const aiVector3D& from)
+		{
+			return float4(from.x, from.y, from.z, 0.0f);
 		}
 	};
 }

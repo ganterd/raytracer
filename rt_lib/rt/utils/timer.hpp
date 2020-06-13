@@ -3,20 +3,9 @@
 #include <chrono>
 #include <ctime>
 
-/*
-    Usage:
-
-    void Function()
-    {
-        startTimer(timerName);
-        ... code to time ...
-        float t = stopTimer(timerName);
-    }
-*/
-
 namespace rt
 {
-    class Timer
+    class timer
     {
     private:
         std::chrono::time_point<std::chrono::system_clock> mStart;

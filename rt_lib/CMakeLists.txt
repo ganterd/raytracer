@@ -14,9 +14,12 @@ add_library(rt SHARED
     rt/math/float4.hpp
     
     rt/scene/ray.hpp
+    rt/scene/scene.cpp
+    rt/scene/bvh/bvh.cpp
 
     rt/buffer/buffer.cpp
 )
 add_dependencies(rt assimp)
-SET_TARGET_PROPERTIES(rt PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(rt assimp)
+set_target_properties(rt PROPERTIES LINKER_LANGUAGE CXX)
 

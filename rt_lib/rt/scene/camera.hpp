@@ -39,7 +39,7 @@ namespace rt
 			mFocalLength = 1.0f;
 			mAspectRatio = (aspect == 0.0f) ? 1.0f : aspect;
 			mFrameHeight = 2.0f;
-			mFrameWidth = aspect * mFrameHeight;
+			mFrameWidth = mAspectRatio * mFrameHeight;
 
 			mPosition = position;
 			mLookAt = lookAt;

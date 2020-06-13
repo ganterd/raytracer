@@ -30,9 +30,33 @@
             "preLaunchTask": "Build PPM Path Tracer (Debug)",
             "request": "launch",
             "program": "${workspaceFolder}/build/debug/bin/pt_app_minimal_ppm",
-            "args": [],
+            "args": [
+                "${workspaceFolder}/scenes/test.blend"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build/debug",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "pt_app_minimal_ppm (release)",
+            "type": "cppdbg",
+            "preLaunchTask": "Build PPM Path Tracer (Release)",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/release/bin/pt_app_minimal_ppm",
+            "args": [
+                "${workspaceFolder}/scenes/test_sponza.blend"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/release",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

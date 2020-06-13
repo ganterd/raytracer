@@ -1,15 +1,14 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <rt/scene/aabb.hpp>
 
 namespace rt
 {
-	class Mesh
+	class mesh
 	{
 	public:
-		glm::vec3 m_BoundsMin;
-		glm::vec3 m_BoundsMax;
-
-		glm::vec3* m_Verts;
+		rt::aabb mAABB;
+		float4* m_Verts;
+		size_t m_NumVerts;
 	};
 }
