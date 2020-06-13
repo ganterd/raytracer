@@ -14,7 +14,7 @@ namespace rt
         bvh_node *mLeft;
         bvh_node *mRight;
 
-        static const char mMaxTris = 2;
+        static const char mMaxTris = 4;
         char mNumTris;
         rt::tri* mTris[mMaxTris];
 
