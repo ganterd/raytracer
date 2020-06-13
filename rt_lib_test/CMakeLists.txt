@@ -13,6 +13,7 @@ add_executable(rt_lib_tests
     scene/ray.cpp
     scene/tri.cpp
     scene/aabb.cpp
+    scene/camera.cpp
 
     buffer/buffer.cpp
 )

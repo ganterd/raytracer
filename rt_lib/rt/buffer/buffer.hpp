@@ -7,32 +7,30 @@
 
 namespace rt
 {
-	class Buffer
+	class buffer
 	{
 	public:
 		int mSizex;
 		int mSizey;
 		float4* mData;
-		float mGamma;
 
-		Buffer(int x, int y)
+		buffer(int x, int y)
 		{
-			mGamma = 2.2f;
 			mData = new float4[x * y];
 			mSizex = x;
 			mSizey = y;
 		}
 
-		~Buffer()
+		~buffer()
 		{
 			delete[] mData;
 		}
 
-		inline float4& Pixel(int x, int y)
+		inline float4& pixel(int x, int y)
 		{
 			return mData[x + mSizex * y];
 		}
 
-		void ToPPM(const char* path, float gamma = 2.2f);
+		void toPPM(const char* path, float gamma = 2.2f);
 	};
 }

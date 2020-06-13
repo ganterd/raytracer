@@ -1,21 +1,20 @@
 #include "gtest/gtest.h"
 #include <rt/buffer/buffer.hpp>
 
-TEST(Buffer, create)
+TEST(buffer, create)
 {
-    rt::Buffer b(512, 512);
+    rt::buffer b(512, 512);
 }
 
-TEST(Buffer, create_write_read_float4)
+TEST(buffer, create_write_read_float4)
 {
-    rt::Buffer b(256, 256);
-    b.mGamma = 1.0f;
+    rt::buffer b(256, 256);
 
     for(int h = 0; h < 256; ++h)
     {
         for(int w = 0; w < 256; ++w)
         {
-            b.Pixel(w, h) =  float4(
+            b.pixel(w, h) =  float4(
                 (float)w / (float)255,
                 (float)h / (float)255,
                 0.0f,
@@ -34,7 +33,7 @@ TEST(Buffer, create_write_read_float4)
                 0.0f,
                 1.0f
             );
-            float4 p = b.Pixel(w, h);
+            float4 p = b.pixel(w, h);
             EXPECT_EQ(p.r, expected.r);
             EXPECT_EQ(p.g, expected.g);
             EXPECT_EQ(p.b, expected.b);
@@ -43,16 +42,15 @@ TEST(Buffer, create_write_read_float4)
     }
 }
 
-TEST(Buffer, write_to_ppm)
+TEST(buffer, write_to_ppm)
 {
-    rt::Buffer b(256, 256);
-    b.mGamma = 1.0f;
+    rt::buffer b(256, 256);
 
     for(int h = 0; h < 256; ++h)
     {
         for(int w = 0; w < 256; ++w)
         {
-            b.Pixel(w, h) = float4(
+            b.pixel(w, h) = float4(
                 (float)w / (float)255,
                 (float)h / (float)255,
                 0.0f,
@@ -61,5 +59,5 @@ TEST(Buffer, write_to_ppm)
         }
     }
 
-    b.ToPPM("file.ppm");
+    b.toPPM("file.ppm", 1.0f);
 }

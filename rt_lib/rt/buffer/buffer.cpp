@@ -4,7 +4,7 @@
 #include <iostream>
 #include <fstream>
 
-void rt::Buffer::ToPPM(
+void rt::buffer::toPPM(
     const char* path,
     float gamma
 ){
@@ -18,13 +18,15 @@ void rt::Buffer::ToPPM(
     f << std::string("P3") << std::endl;
     f << mSizex << " " << mSizey << " 255" << std::endl;
 
-    for(int h = 0; h < mSizey; ++h)
+    // [0,0] is lower left in our buffer, so here is where we
+    // invert the image to output it.
+    for(int h = mSizey - 1; h >= 0; --h)
     {
         for(int w = 0; w < mSizex; ++w)
         {
-            float4 normalizedColor = Pixel(w, h);
-            float4 gamma = pow(normalizedColor, 1.0f / mGamma);
-            float4 scaled = clamp(gamma, 0.0f, 1.0f) * 255.0f;
+            float4 normalizedColor = pixel(w, h);
+            float4 gammav = pow(normalizedColor, 1.0f / gamma);
+            float4 scaled = clamp(gammav, 0.0f, 1.0f) * 255.0f;
             
             uchar4 c;
             c.r = scaled.r;

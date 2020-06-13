@@ -176,8 +176,6 @@ int main (int argc, char* argv[])
 	delete[] threadRenderIndex;
 	std::cout << "Done in " << renderAndCopyTimer.getTime() << "s (render " << actualRenderTime << "s)" << std::endl;
 
-
-
 	while(window.isOpen() && !quitAfterRender)
 	{
 		sf::Event evt;

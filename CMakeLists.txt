@@ -35,6 +35,11 @@ if(RT_LIB_TESTS)
 	add_subdirectory(rt_lib_test)
 endif()
 
+option(PT_MINIMAL_PPM_APP "Build a minimal PPM output app" on)
+if(PT_MINIMAL_PPM_APP)
+	add_subdirectory(pt_app_minimal_ppm)
+endif()
+
 option(RT_MINIMAL_SFML_APP "Build a minimal SFML app" off)
 if(RT_MINIMAL_SFML_APP)
 	ExternalProject_Add(

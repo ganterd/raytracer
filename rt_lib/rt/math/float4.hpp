@@ -69,6 +69,11 @@ public:
         sseData = _mm_sub_ps(sseData, rhs.sseData);
     }
 
+    inline float4 operator-() const
+    {
+        return float4(-x, -y, -z, -w);
+    }
+
     inline void operator*=(const float4& rhs)
     {
         sseData = _mm_mul_ps(sseData, rhs.sseData);
@@ -186,4 +191,14 @@ inline float4 normalize(const float4& a)
 {
     float4 l(length(a));
     return a / l;
+}
+
+inline float4 point(const float4& p)
+{
+    return float4(p.x, p.y, p.z, 1.0f);
+}
+
+inline float4 unitVector(const float4& v)
+{
+    return normalize(float4(v.x, v.y, v.z, 0.0f));
 }

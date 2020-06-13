@@ -66,6 +66,17 @@ TEST(float4, access_index)
     }
 }
 
+TEST(float4, negative)
+{
+    float4 a(1.0f, 2.0f, 3.0f, 4.0f);
+    float4 b = -a;
+
+    EXPECT_FLOAT_EQ(b.x, -1.0f);
+    EXPECT_FLOAT_EQ(b.y, -2.0f);
+    EXPECT_FLOAT_EQ(b.z, -3.0f);
+    EXPECT_FLOAT_EQ(b.w, -4.0f);
+}
+
 /**
  * Test that two float4 can be added
  */
