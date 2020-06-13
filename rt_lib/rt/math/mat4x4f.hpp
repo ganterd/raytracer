@@ -61,30 +61,14 @@ public:
     }
 };
 
-// inline float4 operator*(const mat4x4f& lhs, const float4& rhs)
-// {
-//     float4 result;
-//     for (int row = 0; row < 4; ++row) {
-//         __m128 acc = _mm_setzero_ps();
-
-//         __m128 matRow = lhs.sseData[row];
-//         acc = _mm_mul_ps(matRow, rhs.sseData);
-//         acc = _mm_hadd_ps(acc, acc);
-//         acc = _mm_hadd_ps(acc, acc);
-
-//         _mm_store_ss(&result[row], acc);
-//     }
-//     return result;
-// }
-
-inline float4 operator*(const float4& lhs, const mat4x4f& rhs)
+inline float4 operator*(const mat4x4f& m, const float4& v)
 {
     float4 result;
     for (int row = 0; row < 4; ++row) {
         __m128 acc = _mm_setzero_ps();
 
-        __m128 matRow = rhs.sseData[row];
-        acc = _mm_mul_ps(matRow, lhs.sseData);
+        __m128 matRow = m.sseData[row];
+        acc = _mm_mul_ps(matRow, v.sseData);
         acc = _mm_hadd_ps(acc, acc);
         acc = _mm_hadd_ps(acc, acc);
 

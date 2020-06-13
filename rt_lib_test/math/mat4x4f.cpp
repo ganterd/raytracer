@@ -18,7 +18,7 @@ TEST(mat4x4f, mul_float4_identity)
     mat4x4f m = mat4x4f::identity();
     float4 v(1, 2, 3, 4);
 
-    float4 r = v * m;
+    float4 r = m * v;
 
     EXPECT_EQ(r, v);
 }
@@ -28,7 +28,7 @@ TEST(mat4x4f, mul_float4_scale)
     mat4x4f m = mat4x4f::diagonal(2.0f);
     float4 v(1, 2, 3, 4);
 
-    float4 r = v * m;
+    float4 r = m * v;
 
     EXPECT_EQ(r, float4(2, 4, 6, 8));
 }
@@ -42,7 +42,7 @@ TEST(mat4x4f, rotate_none)
     mat4x4f m = mat4x4f::rotation(float4(0.0f, 0.0f, 0.0f, 0.0f));
     float4 v(0.0f, 0.0f, 1.0f, 0.0f);
 
-    v = v * m;
+    v = m * v;
 
     float4 expected(0.0f, 0.0f, 1.0f, 0.0f);
 
@@ -110,7 +110,7 @@ TEST(mat4x4f, rotate_x)
     mat4x4f m = mat4x4f::rotation(float4(r, 0.0f, 0.0f, 0.0f));
     float4 v(0.0f, 0.0f, 1.0f, 0.0f);
 
-    v = v * m;
+    v = m * v;
 
     float4 expected(0.0f, -1.0f, 0.0f, 0.0f);
 
@@ -131,7 +131,7 @@ TEST(mat4x4f, rotate_y)
     mat4x4f m = mat4x4f::rotation(float4(0.0f, r, 0.0f, 0.0f));
     float4 v(0.0f, 0.0f, 1.0f, 0.0f);
 
-    v = v * m;
+    v = m * v;
 
     float4 expected(1.0f, 0.0f, 0.0f, 0.0f);
 
@@ -152,7 +152,7 @@ TEST(mat4x4f, rotate_z)
     mat4x4f m = mat4x4f::rotation(float4(0.0f, 0.0f, r, 0.0f));
     float4 v(0.0f, 1.0f, 0.0f, 0.0f);
 
-    v = v * m;
+    v = m * v;
 
     float4 expected(-1.0f, 0.0f, 0.0f, 0.0f);
 
@@ -172,7 +172,7 @@ TEST(mat4x4f, rotate_xy)
     mat4x4f my = mat4x4f::rotation(float4(0.0f, ry, 0.0f, 0.0f));
     float4 v(1.0f, 0.0f, 0.0f, 0.0f);
 
-    v = v * my * mx;
+    v = mx * (my * v);
 
     float4 expected(0.0f, 0.707107f, -0.707107f, 0.0f);
 
@@ -193,8 +193,8 @@ TEST(mat4x4f, rotate_rotate_inverse)
 
     float4 v(0.0f, 1.0f, 0.0f, 0.0f);
 
-    float4 actual = v * m;
-    actual = actual * m_inv;
+    float4 actual = m * v;
+    actual = m_inv * actual;
 
     // This is where FP32 precision issues might start happenning
     EXPECT_EQ(actual, v);

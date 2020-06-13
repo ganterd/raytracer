@@ -1,0 +1,50 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "mkdirs",
+			"command": "mkdir",
+			"args": [
+				"-p",
+				"${workspaceFolder}/build/debug",
+				"${workspaceFolder}/build/release"
+			]
+		},
+		{
+			"type": "shell",
+			"label": "CMake (Debug)",
+			"dependsOn": [
+				"mkdirs"
+			],
+			"command": "cmake",
+			"args": [
+				"${workspaceFolder}",
+				"-DCMAKE_BUILD_TYPE=Debug"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/debug"
+			},
+			"group": "build"
+		},
+		{
+			"type": "shell",
+			"label": "Build Path Tracer Tests (Debug)",
+			"dependsOn": [
+				"CMake (Debug)"
+			],
+			"command": "make",
+			"args": [
+				"rt_lib_tests",
+				"-j4"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}/build/debug"
+			},
+			"group": "build",
+			"problemMatcher": [
+				"$gcc"
+			]
+		}
+	]
+}

@@ -10,6 +10,13 @@ public:
 
     quaternion() { };
 
+    /**
+     * @brief Create a quaternion around a certain axis with rotation r in radians
+     * @param r Rotation around axis in radians
+     * @param axisx x component of rotation axis
+     * @param axisy y component of rotation axis
+     * @param axisz z component of rotation axis
+     */
     quaternion(float r, float axisx, float axisy, float axisz)
     {
         w = cosf(r * 0.5f);
@@ -17,11 +24,12 @@ public:
         x = axis.x * sinf(r * 0.5f);
         y = axis.y * sinf(r * 0.5f);
         z = axis.z * sinf(r * 0.5f);
-
-        
     }
 
-    mat4x4f rotationMatrix()
+    /**
+     * @brief Create the rotation matrix that represents this quaternion
+     */
+    mat4x4f rotationMatrix() const
     {
         mat4x4f rotationMatrix;
         rotationMatrix.rows[0] = float4(1.0f - 2.0f * y * y - 2.0f * z * z, 2.0f * x * y - 2.0f * w * z, 2.0f * x * z + 2.0f * w * y, 0.0f);
@@ -32,6 +40,13 @@ public:
     }
 };
 
+/**
+ * @brief Rotate one quaternion by another. 
+ * 
+ * Rotate one quaternion by another.Ordering of operations is very important here. 
+ * The right-hand-side (rhs) is the first rotation applied to a vector. For example:
+ * A vector v r
+ */
 inline quaternion operator*(const quaternion& lhs, const quaternion& rhs)
 {
     quaternion q;
@@ -40,4 +55,12 @@ inline quaternion operator*(const quaternion& lhs, const quaternion& rhs)
     q.y = lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x;
     q.z = lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w;
     return q;
+}
+
+/**
+ * @brief Rotate a vector by a quaternion.
+ */
+inline float4 operator*(const quaternion& q, const float4& v)
+{
+    return q.rotationMatrix() * v;
 }
