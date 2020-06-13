@@ -5,6 +5,7 @@
 
 #include <rt/math/float4.hpp>
 #include <rt/scene/ray.hpp>
+#include <rt/scene/rayhit.hpp>
 
 namespace rt
 {
@@ -56,7 +57,7 @@ namespace rt
             return newAABB;
         }
 
-        bool intersect(const rt::ray& r) const
+        rt::hit intersect(const rt::ray& r) const
         {
             float4 _tmin = (bmin - r.mOrigin) * r.mInvDir;
             float4 _tmax = (bmax - r.mOrigin) * r.mInvDir;
@@ -71,7 +72,10 @@ namespace rt
             tmax = std::min(tmax, _max[1]);
             tmax = std::min(tmax, _max[2]);
         
-            return tmax >= tmin && tmax > 0;
+            rt::hit hit;
+            hit.intersected = tmax >= tmin && tmax > 0;
+            hit.distance = tmin;
+            return hit;
         }
 
         friend std::ostream& operator<< (std::ostream& os, const aabb& a)

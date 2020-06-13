@@ -275,10 +275,10 @@ void rt::bvh::cast(rt::bvh_node *n, const rt::ray &ray, rt::hit &hit)
     if(n == nullptr)
     {
         return;
-    }       
+    }
 
-
-    if(n->mAABB.intersect(ray))
+    rt::hit aabbHit = n->mAABB.intersect(ray);
+    if(aabbHit.intersected && aabbHit.distance < hit.distance)
     {
         if(n->mIsLeaf)
         {

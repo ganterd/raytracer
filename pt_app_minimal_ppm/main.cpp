@@ -9,7 +9,7 @@
 
 int main(int argc, char* argv[])
 {
-    rt::buffer buffer(256, 256);
+    rt::buffer buffer(512, 512);
 
 
     rt::camera camera(
