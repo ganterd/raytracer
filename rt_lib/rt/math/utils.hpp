@@ -1,12 +1,13 @@
 #pragma once
 
 #include <cmath>
+#include <math.h>
 
 class mutils
 {
 public:
     inline static float radians(float d)
     {
-        return d * M_PIf32 / 180.0f;
+        return d * (float)M_PI / 180.0f;
     }
 };

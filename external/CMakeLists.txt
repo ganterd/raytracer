@@ -16,3 +16,13 @@ endif()
 
 add_subdirectory(assimp)
 add_subdirectory(gtest)
+
+if(WIN32)
+	add_custom_target(CopyExternalBinaries
+	  COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/bin
+
+	  COMMAND cmake -E copy_directory ${CMAKE_BINARY_DIR}/external/assimp/assimp/bin/ ${CMAKE_BINARY_DIR}/bin/
+	)
+else()
+	add_custom_target(CopyExternalBinaries )
+endif()

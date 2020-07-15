@@ -8,13 +8,10 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-
-//#include <rt/scene/lights/light.hpp>
-//#include <rt/scene/lights/pointlight.hpp>
-//#include <rt/scene/lights/arealight.hpp>
 #include <rt/scene/mesh/mesh.hpp>
 #include <rt/scene/tri.hpp>
 #include <rt/scene/camera.hpp>
+#include <rt/utils/export.hpp>
 
 namespace rt
 {
@@ -22,7 +19,7 @@ namespace rt
 	{
 	public:
 		const aiScene* assimpScene;
-
+		
 		std::vector<mesh*> m_Meshes;
 		//std::vector<Tri> m_Tris;
 		//std::vector<Light*> mLights;
@@ -36,7 +33,7 @@ namespace rt
 		rt::tri* m_Tris;
 		size_t m_AssignedTris;
 
-		bool fromFile(const std::string& file);
+		rt_lib bool fromFile(const std::string& file);
 
 	private:
 		void NodeRecurse(aiNode* n, const aiMatrix4x4& m);

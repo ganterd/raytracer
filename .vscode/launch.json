@@ -48,17 +48,13 @@
         },
         {
             "name": "pt_app_minimal_ppm (release)",
-            "type": "cppdbg",
             "preLaunchTask": "Build PPM Path Tracer (Release)",
             "request": "launch",
+            "type": "cppdbg",
             "program": "${workspaceFolder}/build/release/bin/pt_app_minimal_ppm",
             "args": [
                 "${workspaceFolder}/scenes/test_sponza.blend"
             ],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/build/release",
-            "environment": [],
-            "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
                 {
@@ -66,7 +62,39 @@
                     "text": "-enable-pretty-printing",
                     "ignoreFailures": true
                 }
-            ]
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/build/release",
+            "environment": [],
+            "externalConsole": false,
+        },
+        {
+            "name": "Path Tracer Minimal (Release Windows) Launch",
+            "preLaunchTask": "Build PPM Path Tracer (Release)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "windows": {
+                "program": "${workspaceFolder}/build/bin/Release/pt_app_minimal_ppm.exe",
+                "cwd": "${workspaceFolder}/build",
+            },
+            "args": [
+                "${workspaceFolder}/scenes/test_sponza.blend"
+            ],
+            "externalConsole": true
+        },
+        {
+            "name": "Path Tracer Minimal (Debug Windows) Launch",
+            "preLaunchTask": "Build PPM Path Tracer (Debug)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "windows": {
+                "program": "${workspaceFolder}/build/bin/Debug/pt_app_minimal_ppm.exe",
+                "cwd": "${workspaceFolder}/build",
+            },
+            "args": [
+                "${workspaceFolder}/scenes/test.blend"
+            ],
+            "externalConsole": true
         }
     ]
 }

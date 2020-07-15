@@ -4,6 +4,7 @@
 #include <mutex>
 #include <rt/math/uchar4.hpp>
 #include <rt/math/float4.hpp>
+#include <rt/utils/export.hpp>
 
 namespace rt
 {
@@ -14,14 +15,14 @@ namespace rt
 		int mSizey;
 		float4* mData;
 
-		buffer(int x, int y)
+		rt_lib buffer(int x, int y)
 		{
 			mData = new float4[x * y];
 			mSizex = x;
 			mSizey = y;
 		}
 
-		~buffer()
+		rt_lib ~buffer()
 		{
 			delete[] mData;
 		}
@@ -31,6 +32,6 @@ namespace rt
 			return mData[x + mSizex * y];
 		}
 
-		void toPPM(const char* path, float gamma = 2.2f);
+		rt_lib void toPPM(const char* path, float gamma = 2.2f);
 	};
 }

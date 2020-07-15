@@ -4,12 +4,21 @@
         {
             "type": "shell",
             "label": "mkdirs",
-            "command": "mkdir",
-            "args": [
-                "-p",
-                "${workspaceFolder}/build/debug",
-                "${workspaceFolder}/build/release"
-            ]
+            "linux": {
+                "command": "mkdir",
+                "args": [
+                    "-p",
+                    "${workspaceFolder}/build/debug",
+                    "${workspaceFolder}/build/release"
+                ]
+            },
+            "windows": {
+                "command": "cmd",
+                "args": [
+                    "/C",
+                    "if not exist ${workspaceFolder}\\build mkdir ${workspaceFolder}\\build"
+                ]
+            }
         },
         {
             "type": "shell",
@@ -22,8 +31,15 @@
                 "${workspaceFolder}",
                 "-DCMAKE_BUILD_TYPE=Debug"
             ],
-            "options": {
-                "cwd": "${workspaceFolder}/build/debug"
+            "linux":{
+                "options": {
+                    "cwd": "${workspaceFolder}/build/debug"
+                },
+            },
+            "windows":{
+                "options": {
+                    "cwd": "${workspaceFolder}/build"
+                },
             },
             "group": "build"
         },
@@ -38,8 +54,15 @@
                 "${workspaceFolder}",
                 "-DCMAKE_BUILD_TYPE=Release"
             ],
-            "options": {
-                "cwd": "${workspaceFolder}/build/release"
+            "linux":{
+                "options": {
+                    "cwd": "${workspaceFolder}/build/release"
+                },
+            },
+            "windows":{
+                "options": {
+                    "cwd": "${workspaceFolder}/build"
+                },
             },
             "group": "build"
         },
@@ -62,43 +85,81 @@
                 "$gcc"
             ]
         },
-		{
-			"type": "shell",
-			"label": "Build PPM Path Tracer (Debug)",
-			"dependsOn": [
-				"CMake (Debug)"
-			],
-			"command": "make",
-			"args": [
-				"pt_app_minimal_ppm",
-				"-j4"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}/build/debug"
-			},
-			"group": "build",
-			"problemMatcher": [
-				"$gcc"
-			]
-		},
-		{
-			"type": "shell",
-			"label": "Build PPM Path Tracer (Release)",
-			"dependsOn": [
-				"CMake (Release)"
-			],
-			"command": "make",
-			"args": [
-				"pt_app_minimal_ppm",
-				"-j4"
-			],
-			"options": {
-				"cwd": "${workspaceFolder}/build/release"
-			},
-			"group": "build",
-			"problemMatcher": [
-				"$gcc"
-			]
-		}
+        {
+            "type": "shell",
+            "label": "Build PPM Path Tracer (Release)",
+            "dependsOn": [
+                "CMake (Release)"
+            ],
+            "linux": {
+                "command": "make",
+                "args": [
+                    "pt_app_minimal_ppm",
+                    "-j4"
+                ],
+                "problemMatcher": [
+                    "$gcc"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}/build/release"
+                },
+            },
+            "windows": {
+                "command": "cmake",
+                "args": [
+                    "--build",
+                    ".",
+                    "--target",
+                    "pt_app_minimal_ppm",
+                    "--config",
+                    "Release"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}/build"
+                },
+            },
+            "group": "build",
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        },
+        {
+            "type": "shell",
+            "label": "Build PPM Path Tracer (Debug)",
+            "dependsOn": [
+                "CMake (Debug)"
+            ],
+            "linux": {
+                "command": "make",
+                "args": [
+                    "pt_app_minimal_ppm",
+                    "-j4"
+                ],
+                "problemMatcher": [
+                    "$gcc"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}/build/release"
+                },
+            },
+            "windows": {
+                "command": "cmake",
+                "args": [
+                    "--build",
+                    ".",
+                    "--target",
+                    "pt_app_minimal_ppm",
+                    "--config",
+                    "Debug"
+                ],
+                "options": {
+                    "cwd": "${workspaceFolder}/build"
+                },
+            },
+            "group": "build",
+            "problemMatcher": [
+                "$msCompile"
+            ]
+        }
     ]
 }

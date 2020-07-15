@@ -7,9 +7,10 @@ set (CMAKE_CXX_STANDARD 11)
 # External Libraries
 include(ExternalProject)
 
-set(ASSIMP_NO_EXPORT ON CACHE BOOL "")
-set(ASSIMP_BUILD_ASSIMP_TOOLS OFF CACHE BOOL "")
-set(ASSIMP_BUILD_TESTS OFF CACHE BOOL "")
+# Set the output folder where your program will be created
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(external)
 
@@ -20,15 +21,11 @@ find_package(Threads)
 
 include_directories(${CMAKE_BINARY_DIR}/ext/include)
 
-# Set the output folder where your program will be created
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 add_subdirectory(rt_lib)
 include_directories(rt_lib)
 
-option(RT_LIB_TESTS "Build the tests" ON)
+option(RT_LIB_TESTS "Build the tests" OFF)
 if(RT_LIB_TESTS)
 	enable_testing()
 	include(GoogleTest)

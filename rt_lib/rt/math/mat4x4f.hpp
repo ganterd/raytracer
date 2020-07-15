@@ -202,7 +202,7 @@ inline mat4x4f inverse(const mat4x4f& m)
         return m;
     }
 
-    det = 1.0 / det;
+    det = 1.0f / det;
     for (i = 0; i < 16; i++)
     {
         inv[i] = inv[i] * det;

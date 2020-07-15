@@ -183,8 +183,8 @@ inline float length(const float4& a)
 {
     __m128 sq = _mm_mul_ps(a.sseData, a.sseData);
     __m128 sq_sum = _mm_hadd_ps(sq, sq);
-    float sum = sq_sum[0] + sq_sum[1];
-    return sqrtf32(sum);
+    float sum = ((float*)&sq_sum)[0] + ((float*)&sq_sum)[1];
+    return sqrtf(sum);
 }
 
 inline float4 normalize(const float4& a)

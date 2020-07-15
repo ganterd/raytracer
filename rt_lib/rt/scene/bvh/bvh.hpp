@@ -4,6 +4,7 @@
 #include <rt/scene/aabb.hpp>
 #include <rt/scene/bvh/bvhnode.hpp>
 #include <rt/utils/timer.hpp>
+#include <rt/utils/export.hpp>
 
 #include <xmmintrin.h>
 #include <emmintrin.h>
@@ -58,12 +59,12 @@ namespace rt
         rt::bvh_node *mRoot;
         rt::scene* mTargetScene;
 
-        bvh();
-        ~bvh();
+        rt_lib bvh();
+        rt_lib ~bvh();
 
-        void construct(rt::scene* scene);
+        rt_lib void construct(rt::scene* scene);
 
-        rt::hit cast(const rt::ray &r);
+        rt_lib rt::hit cast(const rt::ray &r);
         //bool occluded(rt::ray* ray, const float distance);
 
     private:

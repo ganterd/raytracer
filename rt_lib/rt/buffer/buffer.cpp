@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <string>
 
 void rt::buffer::toPPM(
     const char* path,

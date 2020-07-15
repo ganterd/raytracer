@@ -34,7 +34,7 @@ void rt::bvh::construct(rt::scene* scene)
     createBins();
     rt::timer constructionTimer;
     constructionTimer.start();
-    mRoot = recursiveConstruct(tris, scene->m_TotalTris, scene->mCentroidsAABB, 0);
+    mRoot = recursiveConstruct(tris, (int)scene->m_TotalTris, scene->mCentroidsAABB, 0);
     constructionTimer.stop();
     freeBins();
 
@@ -139,7 +139,10 @@ rt::bvh_node* rt::bvh::recursiveConstruct(
         {
             int axisBin = 0;
             if(aabbSize[axis] > 0.0f)
-                axisBin = (float)mNumBins * (( 0.9999f * (tri->centroid[axis] - centroidAABB.bmin[axis])) / aabbSize[axis]);
+            {
+                axisBin = (int)((float)mNumBins * (( 0.9999f * (tri->centroid[axis] - centroidAABB.bmin[axis])) / aabbSize[axis]));
+            }
+
             mBins[axis][axisBin].mTris.push_back(tri);
             mBins[axis][axisBin].mAABB.grow(tri->v0);
             mBins[axis][axisBin].mAABB.grow(tri->v1);
@@ -209,7 +212,7 @@ rt::bvh_best_split rt::bvh::findBestSplit()
             prevCentroidAABB[ax].grow(mBins[ax][b].mCentroidsAABB);
             totalCentroidAABBRight[ax][b] = prevCentroidAABB[ax];
 
-            prevPrimitivesRight[ax] += mBins[ax][b].mTris.size();
+            prevPrimitivesRight[ax] += (int)mBins[ax][b].mTris.size();
             totalPrimitivesRight[ax][b] = prevPrimitivesRight[ax];
         }
     }
@@ -226,7 +229,7 @@ rt::bvh_best_split rt::bvh::findBestSplit()
     {
         totalAABBLeft[ax].grow(mBins[ax][0].mAABB);
         totalCentroidAABBLeft[ax].grow(mBins[ax][0].mCentroidsAABB);
-        totalPrimitivesLeft[ax] += mBins[ax][0].mTris.size();
+        totalPrimitivesLeft[ax] += (int)mBins[ax][0].mTris.size();
     }
 
     for(int b = 1; b < mNumBins - 1; ++b)
@@ -237,7 +240,7 @@ rt::bvh_best_split rt::bvh::findBestSplit()
             // Accumulate the AABBs and primitives count of the left bins
             totalAABBLeft[ax].grow(mBins[ax][b].mAABB);
             totalCentroidAABBLeft[ax].grow(mBins[ax][b].mCentroidsAABB);
-            totalPrimitivesLeft[ax] += mBins[ax][b].mTris.size();
+            totalPrimitivesLeft[ax] += (int)mBins[ax][b].mTris.size();
 
             // Determine the cost of this split
             float costLeft = totalAABBLeft[ax].surfaceArea() * (float)totalPrimitivesLeft[ax];

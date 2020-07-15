@@ -3,6 +3,8 @@
 
 #include <rt/math/mat4x4f.hpp>
 
+#include <math.h>
+
 TEST(mat4x4f, identity)
 {
     mat4x4f m = mat4x4f::identity();

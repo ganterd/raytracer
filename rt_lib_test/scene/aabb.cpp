@@ -106,7 +106,7 @@ TEST(aabb, intersect_outside)
         float4(0, 0, 1, 1)
     );
 
-    EXPECT_TRUE(bb.intersect(r));
+    EXPECT_TRUE(bb.intersect(r).intersected);
 }
 
 TEST(aabb, intersect_inside)
@@ -122,7 +122,7 @@ TEST(aabb, intersect_inside)
         float4(0, 0, 1, 1)
     );
 
-    EXPECT_TRUE(bb.intersect(r));
+    EXPECT_TRUE(bb.intersect(r).intersected);
 }
 
 TEST(aabb, intersect_miss)
@@ -138,5 +138,5 @@ TEST(aabb, intersect_miss)
         float4(0, 0, 1, 1)
     );
 
-    EXPECT_FALSE(bb.intersect(r));
+    EXPECT_FALSE(bb.intersect(r).intersected);
 }
