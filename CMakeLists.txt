@@ -11,6 +11,7 @@ include(ExternalProject)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(external)
 
@@ -21,11 +22,14 @@ find_package(Threads)
 
 include_directories(${CMAKE_BINARY_DIR}/ext/include)
 
+## This sucks... Making symbolic link to resources directory
+set(resource_destination ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/resources)
+set(resource_target ${PROJECT_SOURCE_DIR}/resources)
 
 add_subdirectory(rt_lib)
 include_directories(rt_lib)
 
-option(RT_LIB_TESTS "Build the tests" OFF)
+option(RT_LIB_TESTS "Build the tests" ON)
 if(RT_LIB_TESTS)
 	enable_testing()
 	include(GoogleTest)

@@ -19,12 +19,18 @@ int main(int argc, char* argv[])
         (float)buffer.mSizex / (float)buffer.mSizey
     );
 
+#ifdef WIN32
+    char* filePath = "resources/scenes/test.blend";
+#else
+    char* filePath = argv[1];
+#endif
+
     rt::timer timer;
     timer.start();
     rt::scene scene;
-    scene.fromFile(argv[1]);
+    scene.fromFile(filePath);
     timer.stop();
-    std::cout << "Loaded '" << argv[1] << "' (" << timer.getTime() << "s)" << std::endl;
+    std::cout << "Loaded '" << filePath << "' (" << timer.getTime() << "s)" << std::endl;
 
     rt::bvh bvh;
     bvh.construct(&scene);
